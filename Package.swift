@@ -11,7 +11,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "stackline",
-            path: "Sources"
+            path: "stackline"
         )
     ]
 ) 
