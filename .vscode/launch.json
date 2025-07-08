@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:stackline-swift}",
+            "name": "Debug stackline",
+            "program": "${workspaceFolder:stackline-swift}/.build/debug/stackline",
+            "preLaunchTask": "swift: Build Debug stackline"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:stackline-swift}",
+            "name": "Release stackline",
+            "program": "${workspaceFolder:stackline-swift}/.build/release/stackline",
+            "preLaunchTask": "swift: Build Release stackline"
+        }
+    ]
+}
