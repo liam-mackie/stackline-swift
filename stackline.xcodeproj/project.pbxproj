@@ -6,6 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		940596E22E1D431300830761 /* YabaiSignalListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596E02E1D431300830761 /* YabaiSignalListener.swift */; };
+		940596E32E1D431300830761 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596D82E1D431300830761 /* main.swift */; };
+		940596E42E1D431300830761 /* SimpleIndicatorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DB2E1D431300830761 /* SimpleIndicatorManager.swift */; };
+		940596E52E1D431300830761 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596D72E1D431300830761 /* Configuration.swift */; };
+		940596E62E1D431300830761 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596D92E1D431300830761 /* Models.swift */; };
+		940596E72E1D431300830761 /* StacklineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DD2E1D431300830761 /* StacklineApp.swift */; };
+		940596E82E1D431300830761 /* StacklineOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DE2E1D431300830761 /* StacklineOverlay.swift */; };
+		940596E92E1D431300830761 /* StackDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DC2E1D431300830761 /* StackDetector.swift */; };
+		940596EA2E1D431300830761 /* SignalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DA2E1D431300830761 /* SignalManager.swift */; };
+		940596EB2E1D431300830761 /* YabaiInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DF2E1D431300830761 /* YabaiInterface.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		94DBD45E2E1D375100A977FF /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -19,16 +32,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		940596D72E1D431300830761 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
+		940596D82E1D431300830761 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		940596D92E1D431300830761 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		940596DA2E1D431300830761 /* SignalManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalManager.swift; sourceTree = "<group>"; };
+		940596DB2E1D431300830761 /* SimpleIndicatorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleIndicatorManager.swift; sourceTree = "<group>"; };
+		940596DC2E1D431300830761 /* StackDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackDetector.swift; sourceTree = "<group>"; };
+		940596DD2E1D431300830761 /* StacklineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StacklineApp.swift; sourceTree = "<group>"; };
+		940596DE2E1D431300830761 /* StacklineOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StacklineOverlay.swift; sourceTree = "<group>"; };
+		940596DF2E1D431300830761 /* YabaiInterface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YabaiInterface.swift; sourceTree = "<group>"; };
+		940596E02E1D431300830761 /* YabaiSignalListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YabaiSignalListener.swift; sourceTree = "<group>"; };
 		94DBD4602E1D375100A977FF /* stackline */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = stackline; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		94DBD4622E1D375100A977FF /* stackline */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = stackline;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		94DBD45D2E1D375100A977FF /* Frameworks */ = {
@@ -41,10 +56,27 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		940596E12E1D431300830761 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				940596D72E1D431300830761 /* Configuration.swift */,
+				940596D82E1D431300830761 /* main.swift */,
+				940596D92E1D431300830761 /* Models.swift */,
+				940596DA2E1D431300830761 /* SignalManager.swift */,
+				940596DB2E1D431300830761 /* SimpleIndicatorManager.swift */,
+				940596DC2E1D431300830761 /* StackDetector.swift */,
+				940596DD2E1D431300830761 /* StacklineApp.swift */,
+				940596DE2E1D431300830761 /* StacklineOverlay.swift */,
+				940596DF2E1D431300830761 /* YabaiInterface.swift */,
+				940596E02E1D431300830761 /* YabaiSignalListener.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
 		94DBD4572E1D375100A977FF = {
 			isa = PBXGroup;
 			children = (
-				94DBD4622E1D375100A977FF /* stackline */,
+				940596E12E1D431300830761 /* Sources */,
 				94DBD4612E1D375100A977FF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -71,9 +103,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				94DBD4622E1D375100A977FF /* stackline */,
 			);
 			name = stackline;
 			packageProductDependencies = (
@@ -121,6 +150,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				940596E22E1D431300830761 /* YabaiSignalListener.swift in Sources */,
+				940596E32E1D431300830761 /* main.swift in Sources */,
+				940596E42E1D431300830761 /* SimpleIndicatorManager.swift in Sources */,
+				940596E52E1D431300830761 /* Configuration.swift in Sources */,
+				940596E62E1D431300830761 /* Models.swift in Sources */,
+				940596E72E1D431300830761 /* StacklineApp.swift in Sources */,
+				940596E82E1D431300830761 /* StacklineOverlay.swift in Sources */,
+				940596E92E1D431300830761 /* StackDetector.swift in Sources */,
+				940596EA2E1D431300830761 /* SignalManager.swift in Sources */,
+				940596EB2E1D431300830761 /* YabaiInterface.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
