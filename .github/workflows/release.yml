@@ -44,9 +44,6 @@ jobs:
 
           echo "Notarize app"
           xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
-
-          echo "Attach staple"
-          xcrun stapler staple ".build/apple/Products/Release/stackline"
       - name: Compress archive
         run: tar -czf ${{ github.ref_name }}.tar.gz -C .build/apple/Products/Release stackline
       - name: Release
