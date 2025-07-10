@@ -213,6 +213,56 @@ class CoordinateSystemHandler {
     static func getAllDisplayFrames() -> [NSRect] {
         return getCoreGraphicsDisplayBounds()
     }
+    
+    /// Converts a window frame from Core Graphics coordinates to NSScreen coordinates
+    /// This handles the coordinate system differences between yabai (Core Graphics) and macOS overlay positioning (NSScreen)
+    static func convertCoreGraphicsToNSScreen(_ frame: WindowFrame) -> NSRect {
+        let rect = rectFromWindowFrame(frame)
+        
+        // Get the main display bounds in Core Graphics coordinates
+        let mainDisplayBounds = CGDisplayBounds(CGMainDisplayID())
+        
+        // Convert from Core Graphics (origin at top-left, y increases downward)
+        // to NSScreen coordinates (origin at bottom-left, y increases upward)
+        let convertedY = mainDisplayBounds.height - rect.origin.y - rect.height
+        
+        return NSRect(
+            x: rect.origin.x,
+            y: convertedY,
+            width: rect.width,
+            height: rect.height
+        )
+    }
+    
+    /// Finds the NSScreen that contains the given window frame (in Core Graphics coordinates)
+    static func findNSScreenForCoreGraphicsFrame(_ frame: WindowFrame) -> NSScreen? {
+        let convertedRect = convertCoreGraphicsToNSScreen(frame)
+        
+        // Find the NSScreen that contains this converted rectangle
+        for screen in NSScreen.screens {
+            let screenFrame = screen.frame
+            
+            // Check if the converted stack center point is within this screen
+            let stackCenterX = convertedRect.origin.x + convertedRect.width / 2
+            let stackCenterY = convertedRect.origin.y + convertedRect.height / 2
+            
+            if stackCenterX >= screenFrame.minX && stackCenterX <= screenFrame.maxX &&
+               stackCenterY >= screenFrame.minY && stackCenterY <= screenFrame.maxY {
+                return screen
+            }
+        }
+        
+        // If not found by center point, check for any intersection
+        for screen in NSScreen.screens {
+            let screenFrame = screen.frame
+            if screenFrame.intersects(convertedRect) {
+                return screen
+            }
+        }
+        
+        // Fallback to main screen if no screen found
+        return NSScreen.main
+    }
 }
 
 // MARK: - Stack Detector

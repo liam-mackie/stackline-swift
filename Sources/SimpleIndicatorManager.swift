@@ -202,50 +202,18 @@ class SimpleOverlayWindow: NSWindow {
         self.contentView = hostingView
     }
     
-    // MARK: - Screen Detection Helper
-    
-    private func findScreenForStack(_ stack: WindowStack) -> NSScreen? {
-        let stackFrame = stack.frame
-        let stackRect = CGRect(x: stackFrame.x, y: stackFrame.y, width: stackFrame.w, height: stackFrame.h)
-        
-        logger.debug("Finding screen for stack at position: \(NSStringFromRect(stackRect))")
-        logger.debug("Available screens: \(NSScreen.screens.count)")
-        
-        // Check all available screens
-        for screen in NSScreen.screens {
-            // Use the screen's frame (not visibleFrame) for detection to handle coordinate system properly
-            let screenFrame = screen.frame
-            
-            // Check if the stack center point is within this screen
-            let stackCenterX = stackFrame.x + stackFrame.w / 2
-            let stackCenterY = stackFrame.y + stackFrame.h / 2
-            
-            if stackCenterX >= screenFrame.minX && stackCenterX <= screenFrame.maxX &&
-               stackCenterY >= screenFrame.minY && stackCenterY <= screenFrame.maxY {
-                logger.debug("Found screen by center point: \(NSStringFromRect(screenFrame))")
-                return screen
-            }
-        }
-        
-        // If not found by center point, check for any intersection
-        for screen in NSScreen.screens {
-            let screenFrame = screen.frame
-            if screenFrame.intersects(stackRect) {
-                logger.debug("Found screen by intersection: \(NSStringFromRect(screenFrame))")
-                return screen
-            }
-        }
-        
-        // Fallback to main screen if no screen found
-        logger.warning("No screen found for stack, falling back to main screen")
-        return NSScreen.main
-    }
-    
     func positionRelativeToStack(_ stack: WindowStack) {
-        guard let screen = findScreenForStack(stack) else { return }
+        // Use the coordinate conversion helper to find the correct screen
+        guard let screen = CoordinateSystemHandler.findNSScreenForCoreGraphicsFrame(stack.frame) else { return }
         
         let screenFrame = screen.visibleFrame
-        let stackFrame = stack.frame
+        
+        // Convert the stack frame from Core Graphics coordinates to NSScreen coordinates
+        let convertedStackFrame = CoordinateSystemHandler.convertCoreGraphicsToNSScreen(stack.frame)
+        
+        logger.debug("Original stack frame (Core Graphics): (\(stack.frame.x), \(stack.frame.y), \(stack.frame.w), \(stack.frame.h))")
+        logger.debug("Converted stack frame (NSScreen): \(NSStringFromRect(convertedStackFrame))")
+        logger.debug("Screen frame: \(NSStringFromRect(screenFrame))")
         
         // Calculate indicator size based on content
         let indicatorSize = calculateIndicatorSize(for: [stack])
@@ -254,7 +222,7 @@ class SimpleOverlayWindow: NSWindow {
         
         // Auto positioning: choose the best corner based on available space and screen edges
         if cornerPosition == .auto {
-            cornerPosition = chooseBestCorner(for: stackFrame, screenFrame: screenFrame)
+            cornerPosition = chooseBestCorner(for: convertedStackFrame, screenFrame: screenFrame)
         }
         
         let edgeOffset = configManager.config.positioning.edgeOffset
@@ -266,8 +234,8 @@ class SimpleOverlayWindow: NSWindow {
             // Default: stackline overlaps with stack, left edges aligned
             // With offset: move indicator further left (away from stack)
             indicatorFrame = NSRect(
-                x: stackFrame.x - edgeOffset,
-                y: stackFrame.y + stackFrame.h - indicatorSize.height - cornerOffset,
+                x: convertedStackFrame.origin.x - edgeOffset,
+                y: convertedStackFrame.origin.y + convertedStackFrame.height - indicatorSize.height - cornerOffset,
                 width: indicatorSize.width,
                 height: indicatorSize.height
             )
@@ -275,8 +243,8 @@ class SimpleOverlayWindow: NSWindow {
             // Default: stackline overlaps with stack, right edges aligned
             // With offset: move indicator further right (away from stack)
             indicatorFrame = NSRect(
-                x: stackFrame.x + stackFrame.w - indicatorSize.width + edgeOffset,
-                y: stackFrame.y + stackFrame.h - indicatorSize.height - cornerOffset,
+                x: convertedStackFrame.origin.x + convertedStackFrame.width - indicatorSize.width + edgeOffset,
+                y: convertedStackFrame.origin.y + convertedStackFrame.height - indicatorSize.height - cornerOffset,
                 width: indicatorSize.width,
                 height: indicatorSize.height
             )
@@ -284,8 +252,8 @@ class SimpleOverlayWindow: NSWindow {
             // Default: stackline overlaps with stack, left edges aligned
             // With offset: move indicator further left (away from stack)
             indicatorFrame = NSRect(
-                x: stackFrame.x - edgeOffset,
-                y: stackFrame.y - cornerOffset,
+                x: convertedStackFrame.origin.x - edgeOffset,
+                y: convertedStackFrame.origin.y - cornerOffset,
                 width: indicatorSize.width,
                 height: indicatorSize.height
             )
@@ -293,14 +261,14 @@ class SimpleOverlayWindow: NSWindow {
             // Default: stackline overlaps with stack, right edges aligned
             // With offset: move indicator further right (away from stack)
             indicatorFrame = NSRect(
-                x: stackFrame.x + stackFrame.w - indicatorSize.width + edgeOffset,
-                y: stackFrame.y - cornerOffset,
+                x: convertedStackFrame.origin.x + convertedStackFrame.width - indicatorSize.width + edgeOffset,
+                y: convertedStackFrame.origin.y - cornerOffset,
                 width: indicatorSize.width,
                 height: indicatorSize.height
             )
         case .auto:
             // This should not happen as we handle auto above
-            indicatorFrame = NSRect(x: stackFrame.x, y: stackFrame.y, width: indicatorSize.width, height: indicatorSize.height)
+            indicatorFrame = NSRect(x: convertedStackFrame.origin.x, y: convertedStackFrame.origin.y, width: indicatorSize.width, height: indicatorSize.height)
         }
         
         // Apply screen edge constraints if enabled
@@ -308,6 +276,7 @@ class SimpleOverlayWindow: NSWindow {
             indicatorFrame = constrainToScreen(indicatorFrame, screenFrame: screenFrame)
         }
         
+        logger.debug("Final indicator frame: \(NSStringFromRect(indicatorFrame))")
         self.setFrame(indicatorFrame, display: true, animate: false)
     }
     
@@ -386,12 +355,12 @@ class SimpleOverlayWindow: NSWindow {
         return NSSize(width: indicatorWidth, height: indicatorHeight)
     }
     
-    private func chooseBestCorner(for stackFrame: WindowFrame, screenFrame: NSRect) -> StackCornerPosition {
+    private func chooseBestCorner(for stackFrame: NSRect, screenFrame: NSRect) -> StackCornerPosition {
         // Calculate distances to screen edges
-        let distanceToLeft = stackFrame.x - screenFrame.minX
-        let distanceToRight = screenFrame.maxX - (stackFrame.x + stackFrame.w)
-        let distanceToTop = screenFrame.maxY - (stackFrame.y + stackFrame.h)
-        let distanceToBottom = stackFrame.y - screenFrame.minY
+        let distanceToLeft = stackFrame.minX - screenFrame.minX
+        let distanceToRight = screenFrame.maxX - stackFrame.maxX
+        let distanceToTop = screenFrame.maxY - stackFrame.maxY
+        let distanceToBottom = stackFrame.minY - screenFrame.minY
         
         // Find the closest edge
         let minDistance = min(distanceToLeft, distanceToRight, distanceToTop, distanceToBottom)
@@ -461,14 +430,14 @@ class SimpleOverlayWindow: NSWindow {
     func updateStacksEfficiently(_ stacks: [WindowStack]) {
         guard let stack = stacks.first else { return }
         
-        // Check if we need to reposition the window
-        let stackFrame = CGRect(x: stack.frame.x, y: stack.frame.y, width: stack.frame.w, height: stack.frame.h)
+        // Check if we need to reposition the window using converted coordinates
+        let convertedStackFrame = CoordinateSystemHandler.convertCoreGraphicsToNSScreen(stack.frame)
         let lastPosition = lastStackPositions[stack.id]
         
         // Only reposition if the stack has actually moved
-        if lastPosition == nil || !stackFrame.equalTo(lastPosition!) {
+        if lastPosition == nil || !convertedStackFrame.equalTo(lastPosition!) {
             positionRelativeToStack(stack)
-            lastStackPositions[stack.id] = stackFrame
+            lastStackPositions[stack.id] = convertedStackFrame
         }
         
         // Only update content if stacks actually changed
