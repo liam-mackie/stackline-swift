@@ -26,6 +26,7 @@ struct StacklineApp: App {
     
     // Main window management
     @State private var showMainWindow = false
+    @State private var mainWindowId = "main-window"
     
     // Simple config window management
     @State private var configWindow: NSWindow?
@@ -51,8 +52,8 @@ struct StacklineApp: App {
     }
     
     var body: some Scene {
-        // Main window
-        WindowGroup {
+        // Main window using Window scene for better control
+        Window("Stackline", id: mainWindowId) {
             if isCheckingSingleton {
                 LoadingView()
                     .onAppear {
@@ -243,16 +244,47 @@ struct StacklineApp: App {
     }
     
     private func openMainWindow() {
-        // Try to bring existing window to front
-        if let window = NSApplication.shared.windows.first(where: { $0.contentView != nil }) {
+        // Try to find the main window more specifically
+        let mainWindow = NSApplication.shared.windows.first { window in
+            // Look for the window that has our main content (Stackline window)
+            // Skip windows that are floating level (like overlays) and borderless windows
+            return window.level == .normal && 
+                   window.styleMask.contains(.titled) && 
+                   window.contentView != nil &&
+                   (window.title == "Stackline" || window.title == "") &&
+                   !window.title.contains("Configuration") // Skip config windows
+        }
+        
+        if let window = mainWindow {
             window.alphaValue = 1.0 // Restore visibility
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             logger.debug("Restored and shown main window")
         } else {
-            // Create new window if none exists
-            showMainWindow = true
+            // If we can't find the main window, it was likely closed
+            // Create a new window by changing the window ID to force SwiftUI to recreate it
+            let newId = "main-window-\(UUID().uuidString)"
+            mainWindowId = newId
+            
             NSApp.activate(ignoringOtherApps: true)
+            
+            // Give SwiftUI a moment to create the new window
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                // Find the newly created window and ensure it's visible
+                if let newWindow = NSApplication.shared.windows.first(where: { 
+                    $0.level == .normal && 
+                    $0.styleMask.contains(.titled) && 
+                    $0.contentView != nil &&
+                    ($0.title == "Stackline" || $0.title == "") &&
+                    !$0.title.contains("Configuration")
+                }) {
+                    newWindow.makeKeyAndOrderFront(nil)
+                    NSApp.activate(ignoringOtherApps: true)
+                    logger.debug("Created and activated new main window")
+                } else {
+                    logger.warning("Failed to find newly created main window")
+                }
+            }
         }
     }
     

@@ -579,25 +579,6 @@ struct BehaviorConfigView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            ConfigSection("Display") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Toggle("Show by Default", isOn: Binding(
-                        get: { configManager.config.behavior.showByDefault },
-                        set: { configManager.updateBehavior(\.showByDefault, value: $0) }
-                    ))
-                    
-                    Toggle("Hide When No Stacks", isOn: Binding(
-                        get: { configManager.config.behavior.hideWhenNoStacks },
-                        set: { configManager.updateBehavior(\.hideWhenNoStacks, value: $0) }
-                    ))
-                    
-                    Toggle("Show on All Spaces", isOn: Binding(
-                        get: { configManager.config.behavior.showOnAllSpaces },
-                        set: { configManager.updateBehavior(\.showOnAllSpaces, value: $0) }
-                    ))
-                }
-            }
-            
             ConfigSection("Interaction") {
                 VStack(alignment: .leading, spacing: 8) {
                     Toggle("Click to Focus", isOn: Binding(
