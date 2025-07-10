@@ -74,31 +74,62 @@ struct StacklineOverlay: View {
         }
     }
     
+    // MARK: - Screen Detection Helper
+    
+    private func findScreenForPosition(_ position: CGPoint) -> NSScreen? {
+        // Check all available screens to find which one contains the position
+        for screen in NSScreen.screens {
+            let screenFrame = screen.frame
+            if screenFrame.contains(position) {
+                return screen
+            }
+        }
+        
+        // If not found by exact position, find the closest screen
+        var closestScreen: NSScreen?
+        var minDistance: CGFloat = CGFloat.greatestFiniteMagnitude
+        
+        for screen in NSScreen.screens {
+            let screenFrame = screen.frame
+            let screenCenter = CGPoint(x: screenFrame.midX, y: screenFrame.midY)
+            let distance = sqrt(pow(position.x - screenCenter.x, 2) + pow(position.y - screenCenter.y, 2))
+            
+            if distance < minDistance {
+                minDistance = distance
+                closestScreen = screen
+            }
+        }
+        
+        return closestScreen ?? NSScreen.main
+    }
+    
     private func snapToEdge() {
-        let screenBounds = NSScreen.main?.frame ?? CGRect.zero
+        guard let screen = findScreenForPosition(overlayPosition) else { return }
+        
+        let screenBounds = screen.visibleFrame
         let margin: CGFloat = 20
         
         // Determine which edge to snap to
-        let distanceToLeft = overlayPosition.x
-        let distanceToRight = screenBounds.width - overlayPosition.x
-        let distanceToTop = overlayPosition.y
-        let distanceToBottom = screenBounds.height - overlayPosition.y
+        let distanceToLeft = overlayPosition.x - screenBounds.minX
+        let distanceToRight = screenBounds.maxX - overlayPosition.x
+        let distanceToTop = screenBounds.maxY - overlayPosition.y
+        let distanceToBottom = overlayPosition.y - screenBounds.minY
         
         let minDistance = min(distanceToLeft, distanceToRight, distanceToTop, distanceToBottom)
         
         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
             if minDistance == distanceToLeft {
                 // Snap to left edge
-                overlayPosition.x = margin
+                overlayPosition.x = screenBounds.minX + margin
             } else if minDistance == distanceToRight {
                 // Snap to right edge
-                overlayPosition.x = screenBounds.width - margin
+                overlayPosition.x = screenBounds.maxX - margin
             } else if minDistance == distanceToTop {
                 // Snap to top edge
-                overlayPosition.y = margin
+                overlayPosition.y = screenBounds.maxY - margin
             } else {
                 // Snap to bottom edge
-                overlayPosition.y = screenBounds.height - margin
+                overlayPosition.y = screenBounds.minY + margin
             }
         }
     }

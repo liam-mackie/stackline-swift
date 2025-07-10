@@ -32,7 +32,7 @@ struct StacklineApp: App {
     
     init() {
         let yabai = YabaiInterface()
-        let detector = StackDetector(yabaiInterface: yabai)
+        let detector = StackDetector()
         let listener = YabaiSignalListener(yabaiInterface: yabai, stackDetector: detector)
         let signalManager = SignalManager(stackDetector: detector, yabaiInterface: yabai)
         
@@ -320,7 +320,9 @@ struct StacklineApp: App {
             object: nil,
             queue: .main
         ) { [weak stackDetector] _ in
-            stackDetector?.forceStackDetection()
+            Task { @MainActor in
+                stackDetector?.forceStackDetection()
+            }
         }
         
         // Listen for external signals (from command line)
@@ -338,7 +340,9 @@ struct StacklineApp: App {
         signalListener.startListening()
         
         // Initial stack detection
-        stackDetector.forceStackDetection()
+        Task { @MainActor in
+            stackDetector.forceStackDetection()
+        }
         
         // Auto-show indicators if configured
         if configManager.config.behavior.showByDefault {

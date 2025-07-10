@@ -202,8 +202,47 @@ class SimpleOverlayWindow: NSWindow {
         self.contentView = hostingView
     }
     
+    // MARK: - Screen Detection Helper
+    
+    private func findScreenForStack(_ stack: WindowStack) -> NSScreen? {
+        let stackFrame = stack.frame
+        let stackRect = CGRect(x: stackFrame.x, y: stackFrame.y, width: stackFrame.w, height: stackFrame.h)
+        
+        logger.debug("Finding screen for stack at position: \(NSStringFromRect(stackRect))")
+        logger.debug("Available screens: \(NSScreen.screens.count)")
+        
+        // Check all available screens
+        for screen in NSScreen.screens {
+            // Use the screen's frame (not visibleFrame) for detection to handle coordinate system properly
+            let screenFrame = screen.frame
+            
+            // Check if the stack center point is within this screen
+            let stackCenterX = stackFrame.x + stackFrame.w / 2
+            let stackCenterY = stackFrame.y + stackFrame.h / 2
+            
+            if stackCenterX >= screenFrame.minX && stackCenterX <= screenFrame.maxX &&
+               stackCenterY >= screenFrame.minY && stackCenterY <= screenFrame.maxY {
+                logger.debug("Found screen by center point: \(NSStringFromRect(screenFrame))")
+                return screen
+            }
+        }
+        
+        // If not found by center point, check for any intersection
+        for screen in NSScreen.screens {
+            let screenFrame = screen.frame
+            if screenFrame.intersects(stackRect) {
+                logger.debug("Found screen by intersection: \(NSStringFromRect(screenFrame))")
+                return screen
+            }
+        }
+        
+        // Fallback to main screen if no screen found
+        logger.warning("No screen found for stack, falling back to main screen")
+        return NSScreen.main
+    }
+    
     func positionRelativeToStack(_ stack: WindowStack) {
-        guard let screen = NSScreen.main else { return }
+        guard let screen = findScreenForStack(stack) else { return }
         
         let screenFrame = screen.visibleFrame
         let stackFrame = stack.frame
@@ -382,6 +421,10 @@ class SimpleOverlayWindow: NSWindow {
     private func constrainToScreen(_ frame: NSRect, screenFrame: NSRect) -> NSRect {
         var constrainedFrame = frame
         
+        // Log the screen bounds being used for debugging
+        logger.debug("Constraining overlay to screen bounds: \(NSStringFromRect(screenFrame))")
+        logger.debug("Original overlay frame: \(NSStringFromRect(frame))")
+        
         // Ensure it doesn't go off the left edge
         if constrainedFrame.minX < screenFrame.minX {
             constrainedFrame.origin.x = screenFrame.minX
@@ -402,6 +445,16 @@ class SimpleOverlayWindow: NSWindow {
             constrainedFrame.origin.y = screenFrame.minY
         }
         
+        // Additional validation: if the overlay is still not fully on screen, 
+        // force it to the center of the screen as a fallback
+        if constrainedFrame.maxX > screenFrame.maxX || constrainedFrame.minX < screenFrame.minX ||
+           constrainedFrame.maxY > screenFrame.maxY || constrainedFrame.minY < screenFrame.minY {
+            logger.warning("Overlay still not fully on screen after constraint, centering it")
+            constrainedFrame.origin.x = screenFrame.minX + (screenFrame.width - constrainedFrame.width) / 2
+            constrainedFrame.origin.y = screenFrame.minY + (screenFrame.height - constrainedFrame.height) / 2
+        }
+        
+        logger.debug("Final constrained overlay frame: \(NSStringFromRect(constrainedFrame))")
         return constrainedFrame
     }
     

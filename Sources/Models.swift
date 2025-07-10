@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 // MARK: - Yabai Window Data Models
 
@@ -150,11 +151,47 @@ struct WindowStack: Identifiable, Equatable {
         self.space = windows.first?.space ?? 0
         self.display = windows.first?.display ?? 0
         
-        // Create a stable ID based on the stack position and space
-        // This should remain consistent as long as the stack is in the same location
-        let x = Int(self.frame.x)
-        let y = Int(self.frame.y)
-        self.id = "stack_\(space)_\(display)_\(x)_\(y)"
+        // Create a stable ID based on the stack position and space using display-relative coordinates
+        // This ensures consistency with StackDetector's coordinate system handling using Core Graphics
+        let positionTolerance: Double = 5.0
+        
+        // Use display-relative positioning using Core Graphics (same as yabai)
+        let rect = NSRect(x: self.frame.x, y: self.frame.y, width: self.frame.w, height: self.frame.h)
+        
+        // Get active displays using Core Graphics (same as yabai)
+        var displayCount: UInt32 = 0
+        var result = CGGetActiveDisplayList(0, nil, &displayCount)
+        
+        var displayIndex = 0
+        var relativeFrame = self.frame
+        
+        if result == .success && displayCount > 0 {
+            var displays = Array<CGDirectDisplayID>(repeating: 0, count: Int(displayCount))
+            result = CGGetActiveDisplayList(displayCount, &displays, &displayCount)
+            
+            if result == .success {
+                // Find the display containing this window
+                for (index, display) in displays.enumerated() {
+                    let displayBounds = CGDisplayBounds(display)
+                    if rect.intersects(displayBounds) {
+                        displayIndex = index
+                        relativeFrame = WindowFrame(
+                            x: self.frame.x - displayBounds.origin.x,
+                            y: self.frame.y - displayBounds.origin.y,
+                            w: self.frame.w,
+                            h: self.frame.h
+                        )
+                        break
+                    }
+                }
+            }
+        }
+        
+        // Use display-relative coordinates for position grouping
+        let x = Int(relativeFrame.x / positionTolerance) * Int(positionTolerance)
+        let y = Int(relativeFrame.y / positionTolerance) * Int(positionTolerance)
+        
+        self.id = "display_\(displayIndex)_yabai_display_\(display)_pos_\(x)_\(y)"
     }
     
     static func == (lhs: WindowStack, rhs: WindowStack) -> Bool {
