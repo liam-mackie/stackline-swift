@@ -821,8 +821,6 @@ extension ConfigurationManager {
             </array>
             <key>RunAtLoad</key>
             <true/>
-            <key>KeepAlive</key>
-            <true/>
             <key>ProcessType</key>
             <string>Interactive</string>
             <key>LimitLoadToSessionType</key>
