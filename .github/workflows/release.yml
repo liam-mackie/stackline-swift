@@ -14,11 +14,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: swift-actions/setup-swift@v2
-      - name: Build executable for release
-        run: swift build -c release --arch arm64 --arch x86_64 --product stackline
-      - name: Codesign app
-        # Extract the secrets we defined earlier as environment variables
+      - name: Set up Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_26.0.app/Contents/Developer
+      - name: Build app with Xcode
+        run: |
+          xcodebuild -scheme Stackline -configuration Release -archivePath build/Stackline.xcarchive archive
+          xcodebuild -exportArchive -archivePath build/Stackline.xcarchive -exportPath build/export -exportOptionsPlist ExportOptions.plist
+      - name: Setup signing
         env: 
           MACOS_CERTIFICATE: ${{ secrets.PROD_MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.PROD_MACOS_CERTIFICATE_PWD }}
@@ -31,8 +33,6 @@ jobs:
           security unlock-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
           security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
-          
-          /usr/bin/codesign --force -s "$MACOS_CERTIFICATE_NAME" --options runtime .build/apple/Products/Release/stackline -v
       - name: Notarize app
         env:
           PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
@@ -43,14 +43,45 @@ jobs:
           xcrun notarytool store-credentials "notarytool-profile" --apple-id "$PROD_MACOS_NOTARIZATION_APPLE_ID" --team-id "$PROD_MACOS_NOTARIZATION_TEAM_ID" --password "$PROD_MACOS_NOTARIZATION_PWD"
 
           echo "Creating temp notarization archive"
-          ditto -c -k --keepParent ".build/apple/Products/Release/stackline" "notarization.zip"
+          ditto -c -k --keepParent "build/export/Stackline.app" "notarization.zip"
 
           echo "Notarize app"
           xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
-      - name: Compress archive
-        run: tar -czf ${{ github.ref_name }}.tar.gz -C .build/apple/Products/Release stackline
+          
+          echo "Staple notarization ticket"
+          xcrun stapler staple "build/export/Stackline.app"
+      - name: Create DMG
+        env:
+          MACOS_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
+        run: |
+          # Create a temporary directory for DMG contents
+          mkdir -p dmg_temp
+          cp -R "build/export/Stackline.app" dmg_temp/
+          
+          # Create Applications symlink for easy installation
+          ln -s /Applications dmg_temp/Applications
+          
+          # Create the DMG
+          hdiutil create -volname "Stackline" -srcfolder dmg_temp -ov -format UDZO "Stackline-${{ github.ref_name }}.dmg"
+          
+          # Sign the DMG
+          codesign --force --sign "$MACOS_CERTIFICATE_NAME" --options runtime "Stackline-${{ github.ref_name }}.dmg"
+          
+          # Clean up
+          rm -rf dmg_temp
+      - name: Notarize DMG
+        env:
+          PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
+          PROD_MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_TEAM_ID }}
+          PROD_MACOS_NOTARIZATION_PWD: ${{ secrets.PROD_MACOS_NOTARIZATION_PWD }}
+        run: |
+          echo "Notarize DMG"
+          xcrun notarytool submit "Stackline-${{ github.ref_name }}.dmg" --keychain-profile "notarytool-profile" --wait
+          
+          echo "Staple notarization ticket to DMG"
+          xcrun stapler staple "Stackline-${{ github.ref_name }}.dmg"
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ github.ref_name }}.tar.gz
+          files: Stackline-${{ github.ref_name }}.dmg
           token: ${{ secrets.GITHUB_TOKEN }}

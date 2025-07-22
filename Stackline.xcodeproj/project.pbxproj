@@ -7,46 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		940596E22E1D431300830761 /* YabaiSignalListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596E02E1D431300830761 /* YabaiSignalListener.swift */; };
-		940596E32E1D431300830761 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596D82E1D431300830761 /* main.swift */; };
-		940596E42E1D431300830761 /* SimpleIndicatorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DB2E1D431300830761 /* SimpleIndicatorManager.swift */; };
-		940596E52E1D431300830761 /* Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596D72E1D431300830761 /* Configuration.swift */; };
-		940596E62E1D431300830761 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596D92E1D431300830761 /* Models.swift */; };
-		940596E72E1D431300830761 /* StacklineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DD2E1D431300830761 /* StacklineApp.swift */; };
-		940596E82E1D431300830761 /* StacklineOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DE2E1D431300830761 /* StacklineOverlay.swift */; };
-		940596E92E1D431300830761 /* StackDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DC2E1D431300830761 /* StackDetector.swift */; };
-		940596EA2E1D431300830761 /* SignalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DA2E1D431300830761 /* SignalManager.swift */; };
-		940596EB2E1D431300830761 /* YabaiInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940596DF2E1D431300830761 /* YabaiInterface.swift */; };
+		94A190E42E31C83600B67315 /* Icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 94A190E32E31C83600B67315 /* Icon.icon */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		94DBD45E2E1D375100A977FF /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
-		940596D72E1D431300830761 /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
-		940596D82E1D431300830761 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		940596D92E1D431300830761 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		940596DA2E1D431300830761 /* SignalManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalManager.swift; sourceTree = "<group>"; };
-		940596DB2E1D431300830761 /* SimpleIndicatorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleIndicatorManager.swift; sourceTree = "<group>"; };
-		940596DC2E1D431300830761 /* StackDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackDetector.swift; sourceTree = "<group>"; };
-		940596DD2E1D431300830761 /* StacklineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StacklineApp.swift; sourceTree = "<group>"; };
-		940596DE2E1D431300830761 /* StacklineOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StacklineOverlay.swift; sourceTree = "<group>"; };
-		940596DF2E1D431300830761 /* YabaiInterface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YabaiInterface.swift; sourceTree = "<group>"; };
-		940596E02E1D431300830761 /* YabaiSignalListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YabaiSignalListener.swift; sourceTree = "<group>"; };
-		94DBD4602E1D375100A977FF /* stackline */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = stackline; sourceTree = BUILT_PRODUCTS_DIR; };
+		944517252E31A0A3006CBAC1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		947CF8732E319B4300A0F9A5 /* Stackline.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stackline.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		94A190E32E31C83600B67315 /* Icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = Icon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		944517282E31A0B8006CBAC1 /* Resources */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		947CF8752E319B4300A0F9A5 /* Sources */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
-		94DBD45D2E1D375100A977FF /* Frameworks */ = {
+		947CF8702E319B4300A0F9A5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -56,35 +40,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		940596E12E1D431300830761 /* Sources */ = {
+		947CF86A2E319B4300A0F9A5 = {
 			isa = PBXGroup;
 			children = (
-				940596D72E1D431300830761 /* Configuration.swift */,
-				940596D82E1D431300830761 /* main.swift */,
-				940596D92E1D431300830761 /* Models.swift */,
-				940596DA2E1D431300830761 /* SignalManager.swift */,
-				940596DB2E1D431300830761 /* SimpleIndicatorManager.swift */,
-				940596DC2E1D431300830761 /* StackDetector.swift */,
-				940596DD2E1D431300830761 /* StacklineApp.swift */,
-				940596DE2E1D431300830761 /* StacklineOverlay.swift */,
-				940596DF2E1D431300830761 /* YabaiInterface.swift */,
-				940596E02E1D431300830761 /* YabaiSignalListener.swift */,
-			);
-			path = Sources;
-			sourceTree = "<group>";
-		};
-		94DBD4572E1D375100A977FF = {
-			isa = PBXGroup;
-			children = (
-				940596E12E1D431300830761 /* Sources */,
-				94DBD4612E1D375100A977FF /* Products */,
+				944517282E31A0B8006CBAC1 /* Resources */,
+				944517252E31A0A3006CBAC1 /* README.md */,
+				947CF8752E319B4300A0F9A5 /* Sources */,
+				947CF8742E319B4300A0F9A5 /* Products */,
+				94A190E32E31C83600B67315 /* Icon.icon */,
 			);
 			sourceTree = "<group>";
 		};
-		94DBD4612E1D375100A977FF /* Products */ = {
+		947CF8742E319B4300A0F9A5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				94DBD4602E1D375100A977FF /* stackline */,
+				947CF8732E319B4300A0F9A5 /* Stackline.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -92,81 +62,86 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		94DBD45F2E1D375100A977FF /* stackline */ = {
+		947CF8722E319B4300A0F9A5 /* Stackline */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 94DBD4672E1D375100A977FF /* Build configuration list for PBXNativeTarget "stackline" */;
+			buildConfigurationList = 947CF87F2E319B4400A0F9A5 /* Build configuration list for PBXNativeTarget "Stackline" */;
 			buildPhases = (
-				94DBD45C2E1D375100A977FF /* Sources */,
-				94DBD45D2E1D375100A977FF /* Frameworks */,
-				94DBD45E2E1D375100A977FF /* CopyFiles */,
+				947CF86F2E319B4300A0F9A5 /* Sources */,
+				947CF8702E319B4300A0F9A5 /* Frameworks */,
+				947CF8712E319B4300A0F9A5 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = stackline;
+			fileSystemSynchronizedGroups = (
+				944517282E31A0B8006CBAC1 /* Resources */,
+				947CF8752E319B4300A0F9A5 /* Sources */,
+			);
+			name = Stackline;
 			packageProductDependencies = (
 			);
-			productName = stackline;
-			productReference = 94DBD4602E1D375100A977FF /* stackline */;
-			productType = "com.apple.product-type.tool";
+			productName = Stackline;
+			productReference = 947CF8732E319B4300A0F9A5 /* Stackline.app */;
+			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		94DBD4582E1D375100A977FF /* Project object */ = {
+		947CF86B2E319B4300A0F9A5 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1640;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
-					94DBD45F2E1D375100A977FF = {
+					947CF8722E319B4300A0F9A5 = {
 						CreatedOnToolsVersion = 16.4;
 					};
 				};
 			};
-			buildConfigurationList = 94DBD45B2E1D375100A977FF /* Build configuration list for PBXProject "stackline" */;
+			buildConfigurationList = 947CF86E2E319B4300A0F9A5 /* Build configuration list for PBXProject "Stackline" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 94DBD4572E1D375100A977FF;
+			mainGroup = 947CF86A2E319B4300A0F9A5;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 94DBD4612E1D375100A977FF /* Products */;
+			productRefGroup = 947CF8742E319B4300A0F9A5 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				94DBD45F2E1D375100A977FF /* stackline */,
+				947CF8722E319B4300A0F9A5 /* Stackline */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		947CF8712E319B4300A0F9A5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				94A190E42E31C83600B67315 /* Icon.icon in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
-		94DBD45C2E1D375100A977FF /* Sources */ = {
+		947CF86F2E319B4300A0F9A5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				940596E22E1D431300830761 /* YabaiSignalListener.swift in Sources */,
-				940596E32E1D431300830761 /* main.swift in Sources */,
-				940596E42E1D431300830761 /* SimpleIndicatorManager.swift in Sources */,
-				940596E52E1D431300830761 /* Configuration.swift in Sources */,
-				940596E62E1D431300830761 /* Models.swift in Sources */,
-				940596E72E1D431300830761 /* StacklineApp.swift in Sources */,
-				940596E82E1D431300830761 /* StacklineOverlay.swift in Sources */,
-				940596E92E1D431300830761 /* StackDetector.swift in Sources */,
-				940596EA2E1D431300830761 /* SignalManager.swift in Sources */,
-				940596EB2E1D431300830761 /* YabaiInterface.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		94DBD4652E1D375100A977FF /* Debug */ = {
+		947CF87D2E319B4400A0F9A5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -200,6 +175,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = UAHWPHRF97;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -225,12 +201,13 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
-		94DBD4662E1D375100A977FF /* Release */ = {
+		947CF87E2E319B4400A0F9A5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -264,6 +241,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = UAHWPHRF97;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -282,30 +260,69 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
 		};
-		94DBD4682E1D375100A977FF /* Debug */ = {
+		947CF8802E319B4400A0F9A5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = Icon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = Sources/Stackline.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = UAHWPHRF97;
 				ENABLE_HARDENED_RUNTIME = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = stackline;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Stackline;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = sh.mackie.Stackline;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
-		94DBD4692E1D375100A977FF /* Release */ = {
+		947CF8812E319B4400A0F9A5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = Icon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = Sources/Stackline.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = UAHWPHRF97;
 				ENABLE_HARDENED_RUNTIME = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = stackline;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Stackline;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = sh.mackie.Stackline;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -313,25 +330,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		94DBD45B2E1D375100A977FF /* Build configuration list for PBXProject "stackline" */ = {
+		947CF86E2E319B4300A0F9A5 /* Build configuration list for PBXProject "Stackline" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				94DBD4652E1D375100A977FF /* Debug */,
-				94DBD4662E1D375100A977FF /* Release */,
+				947CF87D2E319B4400A0F9A5 /* Debug */,
+				947CF87E2E319B4400A0F9A5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		94DBD4672E1D375100A977FF /* Build configuration list for PBXNativeTarget "stackline" */ = {
+		947CF87F2E319B4400A0F9A5 /* Build configuration list for PBXNativeTarget "Stackline" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				94DBD4682E1D375100A977FF /* Debug */,
-				94DBD4692E1D375100A977FF /* Release */,
+				947CF8802E319B4400A0F9A5 /* Debug */,
+				947CF8812E319B4400A0F9A5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 94DBD4582E1D375100A977FF /* Project object */;
+	rootObject = 947CF86B2E319B4300A0F9A5 /* Project object */;
 }
