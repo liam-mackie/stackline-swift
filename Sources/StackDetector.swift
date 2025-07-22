@@ -151,16 +151,16 @@ class CoordinateSystemHandler {
         return (mainDisplayBounds, relativeFrame, 0)
     }
     
-    /// Creates a position key for grouping windows by position within a display
-    /// This ensures proper grouping even across multiple displays with different origins
-    static func createPositionKey(for frame: WindowFrame, tolerance: Double, display: Int) -> String {
+    /// Creates a position key for grouping windows by position within a display and space
+    /// This ensures proper grouping even across multiple displays with different origins and spaces
+    static func createPositionKey(for frame: WindowFrame, tolerance: Double, display: Int, space: Int) -> String {
         let (_, relativeFrame, displayIndex) = convertToDisplayRelative(frame)
         
         // Use display-relative coordinates for position grouping
         let x = Int(relativeFrame.x / tolerance) * Int(tolerance)
         let y = Int(relativeFrame.y / tolerance) * Int(tolerance)
         
-        return "display_\(displayIndex)_yabai_display_\(display)_pos_\(x)_\(y)"
+        return "display_\(displayIndex)_yabai_display_\(display)_space_\(space)_pos_\(x)_\(y)"
     }
     
     // MARK: - Legacy methods for compatibility (now using Core Graphics)
@@ -383,7 +383,8 @@ class StackDetector: ObservableObject {
                 let positionKey = CoordinateSystemHandler.createPositionKey(
                     for: window.frame, 
                     tolerance: positionTolerance, 
-                    display: window.display
+                    display: window.display,
+                    space: window.space
                 )
                 return positionKey
             }
@@ -504,7 +505,8 @@ class StackDetector: ObservableObject {
             let stackId = CoordinateSystemHandler.createPositionKey(
                 for: focusedWindow.frame, 
                 tolerance: positionTolerance, 
-                display: focusedWindow.display
+                display: focusedWindow.display,
+                space: focusedWindow.space
             )
             
             // Update the visibility state for this stack
