@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    runs-on: macos-latest
+    runs-on: macos-15
 
     permissions:
       contents: write
@@ -21,7 +21,7 @@ jobs:
           xcodebuild -scheme Stackline -configuration Release -archivePath build/Stackline.xcarchive archive
           xcodebuild -exportArchive -archivePath build/Stackline.xcarchive -exportPath build/export -exportOptionsPlist ExportOptions.plist
       - name: Setup signing
-        env: 
+        env:
           MACOS_CERTIFICATE: ${{ secrets.PROD_MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.PROD_MACOS_CERTIFICATE_PWD }}
           MACOS_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
@@ -47,7 +47,7 @@ jobs:
 
           echo "Notarize app"
           xcrun notarytool submit "notarization.zip" --keychain-profile "notarytool-profile" --wait
-          
+
           echo "Staple notarization ticket"
           xcrun stapler staple "build/export/Stackline.app"
       - name: Create DMG
@@ -57,16 +57,16 @@ jobs:
           # Create a temporary directory for DMG contents
           mkdir -p dmg_temp
           cp -R "build/export/Stackline.app" dmg_temp/
-          
+
           # Create Applications symlink for easy installation
           ln -s /Applications dmg_temp/Applications
-          
+
           # Create the DMG
           hdiutil create -volname "Stackline" -srcfolder dmg_temp -ov -format UDZO "Stackline-${{ github.ref_name }}.dmg"
-          
+
           # Sign the DMG
           codesign --force --sign "$MACOS_CERTIFICATE_NAME" --options runtime "Stackline-${{ github.ref_name }}.dmg"
-          
+
           # Clean up
           rm -rf dmg_temp
       - name: Notarize DMG
@@ -77,7 +77,7 @@ jobs:
         run: |
           echo "Notarize DMG"
           xcrun notarytool submit "Stackline-${{ github.ref_name }}.dmg" --keychain-profile "notarytool-profile" --wait
-          
+
           echo "Staple notarization ticket to DMG"
           xcrun stapler staple "Stackline-${{ github.ref_name }}.dmg"
       - name: Release
@@ -85,3 +85,4 @@ jobs:
         with:
           files: Stackline-${{ github.ref_name }}.dmg
           token: ${{ secrets.GITHUB_TOKEN }}
+
