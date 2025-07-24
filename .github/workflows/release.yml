@@ -33,8 +33,10 @@ jobs:
         env:
           MACOS_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
         run: |
-          xcodebuild -scheme Stackline -configuration Release -archivePath build/Stackline.xcarchive archive CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$MACOS_CERTIFICATE_NAME" PROVISIONING_PROFILE_SPECIFIER=""
-          xcodebuild -exportArchive -archivePath build/Stackline.xcarchive -exportPath build/export -exportOptionsPlist ExportOptions.plist
+          xcodebuild -scheme Stackline -configuration Release -derivedDataPath build ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$MACOS_CERTIFICATE_NAME" PROVISIONING_PROFILE_SPECIFIER=""
+          # Copy the built app to export directory for consistency with later steps
+          mkdir -p build/export
+          cp -R build/Build/Products/Release/Stackline.app build/export/
       - name: Notarize app
         env:
           PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
