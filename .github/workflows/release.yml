@@ -16,10 +16,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: Set up Xcode version
         run: sudo xcode-select -s /Applications/Xcode_26.0.app/Contents/Developer
-      - name: Build app with Xcode
-        run: |
-          xcodebuild -scheme Stackline -configuration Release -archivePath build/Stackline.xcarchive archive
-          xcodebuild -exportArchive -archivePath build/Stackline.xcarchive -exportPath build/export -exportOptionsPlist ExportOptions.plist
       - name: Setup signing
         env:
           MACOS_CERTIFICATE: ${{ secrets.PROD_MACOS_CERTIFICATE }}
@@ -31,8 +27,12 @@ jobs:
           security create-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain 
           security default-keychain -s build.keychain
           security unlock-keychain -p "$MACOS_CI_KEYCHAIN_PWD" build.keychain
-          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign -T /usr/bin/xcodebuild
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_CI_KEYCHAIN_PWD" build.keychain
+      - name: Build app with Xcode
+        run: |
+          xcodebuild -scheme Stackline -configuration Release -archivePath build/Stackline.xcarchive archive
+          xcodebuild -exportArchive -archivePath build/Stackline.xcarchive -exportPath build/export -exportOptionsPlist ExportOptions.plist
       - name: Notarize app
         env:
           PROD_MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
