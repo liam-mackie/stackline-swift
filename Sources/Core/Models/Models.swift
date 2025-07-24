@@ -191,7 +191,7 @@ struct WindowStack: Identifiable, Equatable {
         let x = Int(relativeFrame.x / positionTolerance) * Int(positionTolerance)
         let y = Int(relativeFrame.y / positionTolerance) * Int(positionTolerance)
         
-        self.id = "display_\(displayIndex)_yabai_display_\(display)_pos_\(x)_\(y)"
+        self.id = "display_\(displayIndex)_yabai_display_\(display)_space_\(space)_pos_\(x)_\(y)"
     }
     
     static func == (lhs: WindowStack, rhs: WindowStack) -> Bool {
