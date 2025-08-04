@@ -8,9 +8,25 @@ A Swift application that interfaces with [Yabai](https://github.com/koekeishiya/
 
 - macOS 13.0 or later
 - [Yabai](https://github.com/koekeishiya/yabai) installed and running
-- Swift 6+ (for building from source)
+
+### Installing the pre-built binary
+
+1. Download the DMG from [the releases](https://github.com/liam-mackie/stackline-swift/releases/latest)
+2. Mount the DMG by double clicking
+3. Drag the app from the DMG to the Applications folder
+4. Run the application
+
+The application is signed, notarized and stapled, so you should be able to just run from there!
 
 ### Building from Source
+
+*Note: I recently swapped from using plain old swift to xcode to build a signed app bundle*
+
+#### Prerequisites
+* XCode 26+ (for the app icon)
+  * It will compile with a lower version, but your mileage may vary
+
+#### Steps
 
 1. Clone the repository:
    ```bash
@@ -20,17 +36,17 @@ A Swift application that interfaces with [Yabai](https://github.com/koekeishiya/
 
 2. Build the application:
    ```bash
-   swift build --configuration release
+   xcodebuild -scheme Stackline -configuration Release -derivedDataPath build
    ```
 
-3. The built executable will be located at:
+3. The built app will be located at:
    ```bash
-   .build/release/stackline
+   build/Build/Products/Release/Stackline.app
    ```
 
-4. Copy it to your PATH:
+4. Copy it to your applications folder:
    ```bash
-   cp .build/release/stackline /usr/local/bin/
+   cp -r build/Build/Products/Release/Stackline.app /Applications
    ```
 
 ## Configuration
@@ -49,23 +65,14 @@ You can also manually trigger signal setup from the Stackline interface by click
 **Signal Cleanup**:
 Stackline automatically removes its signals when terminating normally with a 20-second timeout. For manual cleanup (e.g., after an unclean shutdown), you can run:
 ```bash
-stackline --cleanup
+/Applications/Stackline.app/Contents/MacOS/Stackline --cleanup
 ```
 
 ### Auto-start
 
-To start Stackline automatically, ensure `stackline` is installed to your path, then run it. In the behaviour section of configuration, tick "Launch at startup"
+To start Stackline automatically, ensure `stackline` is installed to your applications folder, then run it. In the behaviour section of configuration, tick "Launch at startup"
 
 ## Usage
-
-### Starting the Application
-
-Run Stackline from the command line:
-```bash
-stackline
-```
-
-Or simply double-click the executable.
 
 ### Interacting with Stacks
 You can click on a stacked application's icon, pill or dot to swap to the application.
@@ -76,41 +83,25 @@ Stackline supports several command-line options:
 
 ```bash
 # Start the application
-stackline
+/Applications/Stackline.app/Contents/MacOS/Stackline
 
 # Handle a signal from Yabai (used internally by automatic signal setup)
-stackline handle-signal window_created
+/Applications/Stackline.app/Contents/MacOS/Stackline handle-signal window_created
 
 # Show version information
-stackline --version
+/Applications/Stackline.app/Contents/MacOS/Stackline --version
 
 # Show help
-stackline --help
+/Applications/Stackline.app/Contents/MacOS/Stackline --help
 
 # Test signal system
-stackline --test-client
+/Applications/Stackline.app/Contents/MacOS/Stackline --test-client
 
 # Clean up yabai signals
-stackline --cleanup
+/Applications/Stackline.app/Contents/MacOS/Stackline --cleanup
 ```
 
 ## Development
-
-### Building and Testing
-
-```bash
-# Build in debug mode
-swift build
-
-# Run tests
-swift test
-
-# Build for release
-swift build --configuration release
-
-# Run the application
-swift run stackline
-```
 
 ### Contributing
 
@@ -127,10 +118,6 @@ Contributions are welcome! Please:
 - **macOS**: 13.0+ (Ventura or later) - tested on `15.5 (24F74)`.
 - **Yabai**: Any recent version - tested with `yabai-v7.1.15`
 - **Architecture**: Intel x86_64 or Apple Silicon (universal binary support)
-
-## License
-
-This project is licensed under the Apache 2 License. See the LICENSE file for details.
 
 ## Acknowledgments
 
