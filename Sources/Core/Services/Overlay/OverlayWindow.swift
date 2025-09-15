@@ -188,11 +188,11 @@ final class OverlayWindow: NSWindow {
     func hide() {
         guard self.isVisible else { return }
         
-        NSAnimationContext.runAnimationGroup({ context in
+        NSAnimationContext.runAnimationGroup({ [weak self] context in
             context.duration = 0.15
-            self.animator().alphaValue = 0
-        }) {
-            self.orderOut(nil)
+            self?.animator().alphaValue = 0
+        }) { [weak self] in
+            self?.orderOut(nil)
         }
     }
     

@@ -34,8 +34,10 @@ final class AppCoordinator: ObservableObject {
     @Published var configWindow: NSWindow?
     
     // MARK: - Private Properties
-    
+
     private var cancellables = Set<AnyCancellable>()
+    private var notificationObservers: [NSObjectProtocol] = []
+    private var windowCloseObservers: [NSWindow: NSObjectProtocol] = [:]
     
     // MARK: - Initialization
     
@@ -64,27 +66,27 @@ final class AppCoordinator: ObservableObject {
     
     private func setupObservationChains() {
         // Forward objectWillChange notifications from child objects to this coordinator
-        yabaiInterface.objectWillChange.sink { [weak self] in
+        yabaiInterface.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }.store(in: &cancellables)
-        
-        stackDetector.objectWillChange.sink { [weak self] in
+
+        stackDetector.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }.store(in: &cancellables)
-        
-        signalListener.objectWillChange.sink { [weak self] in
+
+        signalListener.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }.store(in: &cancellables)
-        
-        configManager.objectWillChange.sink { [weak self] in
+
+        configManager.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }.store(in: &cancellables)
-        
-        indicatorManager.objectWillChange.sink { [weak self] in
+
+        indicatorManager.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }.store(in: &cancellables)
-        
-        signalManager.objectWillChange.sink { [weak self] in
+
+        signalManager.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }.store(in: &cancellables)
     }
@@ -182,13 +184,16 @@ final class AppCoordinator: ObservableObject {
     }
     
     private func setupNotifications() {
-        NotificationCenter.default.addObserver(
+        let observer = NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification,
             object: nil,
             queue: .main
-        ) { _ in
-            self.cleanup()
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.cleanup()
+            }
         }
+        notificationObservers.append(observer)
     }
     
     private func setupSignalHandlers() {
@@ -226,7 +231,7 @@ final class AppCoordinator: ObservableObject {
             }
             .store(in: &cancellables)
         
-        NotificationCenter.default.addObserver(
+        let updateObserver = NotificationCenter.default.addObserver(
             forName: Notification.Name("StacklineUpdate"),
             object: nil,
             queue: .main
@@ -235,16 +240,20 @@ final class AppCoordinator: ObservableObject {
                 stackDetector?.forceStackDetection()
             }
         }
-        
-        NotificationCenter.default.addObserver(
+        notificationObservers.append(updateObserver)
+
+        let signalObserver = NotificationCenter.default.addObserver(
             forName: Notification.Name("StacklineExternalSignal"),
             object: nil,
             queue: .main
-        ) { [weak signalListener] notification in
-            if let event = notification.object as? String {
-                signalListener?.handleExternalSignal(event)
+        ) { [weak self] notification in
+            Task { @MainActor in
+                if let event = notification.object as? String {
+                    self?.signalListener.handleExternalSignal(event)
+                }
             }
         }
+        notificationObservers.append(signalObserver)
         
         signalListener.startListening()
         
@@ -323,16 +332,30 @@ final class AppCoordinator: ObservableObject {
     }
     
     private func setupWindowCloseHandler(for window: NSWindow) {
+        // Remove any existing observer for this window
+        if let existingObserver = windowCloseObservers[window] {
+            NotificationCenter.default.removeObserver(existingObserver)
+        }
+
         // Set up notification for when window closes
-        NotificationCenter.default.addObserver(
+        let observer = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
             object: window,
             queue: .main
-        ) { _ in
-            // Hide dock icon when main window closes
-            NSApplication.shared.setActivationPolicy(.accessory)
-            logger.debug("Main window closed, hiding dock icon")
+        ) { [weak self, weak window] _ in
+            Task { @MainActor in
+                // Hide dock icon when main window closes
+                NSApplication.shared.setActivationPolicy(.accessory)
+                logger.debug("Main window closed, hiding dock icon")
+
+                // Clean up the observer reference
+                if let window = window, let observer = self?.windowCloseObservers[window] {
+                    NotificationCenter.default.removeObserver(observer)
+                    self?.windowCloseObservers.removeValue(forKey: window)
+                }
+            }
         }
+        windowCloseObservers[window] = observer
     }
     
     func openConfigurationWindow() {
@@ -375,10 +398,25 @@ final class AppCoordinator: ObservableObject {
     }
     
     // MARK: - Cleanup
-    
+
     private func cleanup() {
         logger.info("Starting cleanup process")
-        
+
+        // Clean up all notification observers
+        for observer in notificationObservers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        notificationObservers.removeAll()
+
+        // Clean up window close observers
+        for (_, observer) in windowCloseObservers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        windowCloseObservers.removeAll()
+
+        // Cancel all Combine subscriptions
+        cancellables.removeAll()
+
         let lockFilePath = "/tmp/stackline.lock"
         do {
             try FileManager.default.removeItem(atPath: lockFilePath)
@@ -386,10 +424,29 @@ final class AppCoordinator: ObservableObject {
         } catch {
             logger.debug("Could not remove lock file: \(error.localizedDescription)")
         }
-        
+
         logger.info("Cleaning up yabai signals on app termination...")
         let yabaiInterface = YabaiInterface()
         yabaiInterface.performSignalCleanup(timeout: 20.0)
         logger.info("Cleanup process completed")
+    }
+
+    deinit {
+        // Clean up all notification observers
+        for observer in notificationObservers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+
+        // Clean up window close observers
+        for (_, observer) in windowCloseObservers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+
+        // Cancel all Combine subscriptions
+        cancellables.removeAll()
+
+        // Remove lock file
+        let lockFilePath = "/tmp/stackline.lock"
+        try? FileManager.default.removeItem(atPath: lockFilePath)
     }
 }

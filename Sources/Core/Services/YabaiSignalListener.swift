@@ -9,17 +9,18 @@ private let logger = Logger(subsystem: "sh.mackie.stackline", category: "signal-
 class YabaiSignalListener: ObservableObject {
     private let yabaiInterface: YabaiInterface
     private let stackDetector: StackDetector
-    
+
     @Published var isListening: Bool = false
     @Published var lastSignalReceived: String?
     @Published var signalCount: Int = 0
-    
+
     private var pollingTask: Task<Void, Never>?
     private var lastWindowState: [Int: Bool] = [:] // windowId -> isFocused
     private var lastStackCount: Int = 0
     private var lastStackState: [String: Int] = [:] // stackId -> windowCount
     private var lastSignalCheck: Date = Date.distantPast
     private var isSettingUpSignals: Bool = false
+    private var distributedNotificationObserver: NSObjectProtocol?
     
     private let pollingInterval: TimeInterval = 1.0 // 1 second
     private let signalCheckInterval: TimeInterval = 30.0 // Check signals every 30 seconds
@@ -28,23 +29,25 @@ class YabaiSignalListener: ObservableObject {
     init(yabaiInterface: YabaiInterface, stackDetector: StackDetector) {
         self.yabaiInterface = yabaiInterface
         self.stackDetector = stackDetector
-        
+
         // Listen for distributed notifications from external signals
-        DistributedNotificationCenter.default().addObserver(
-            self,
-            selector: #selector(handleDistributedNotification),
-            name: Notification.Name("StacklineUpdate"),
+        distributedNotificationObserver = DistributedNotificationCenter.default().addObserver(
+            forName: Notification.Name("StacklineUpdate"),
             object: nil,
-            suspensionBehavior: .deliverImmediately
-        )
-        
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleDistributedNotification()
+        }
+
         logger.debug("YabaiSignalListener initialized")
     }
     
     deinit {
         stopListening()
-        DistributedNotificationCenter.default().removeObserver(self)
-        
+        if let observer = distributedNotificationObserver {
+            DistributedNotificationCenter.default().removeObserver(observer)
+        }
+
         // Note: Signal cleanup will be handled by app termination handlers
         // Async cleanup in deinit can be problematic, so we rely on app-level cleanup
         logger.debug("YabaiSignalListener deinitialized (signals will be cleaned up by app termination handler)")
@@ -79,16 +82,18 @@ class YabaiSignalListener: ObservableObject {
     // MARK: - Polling Implementation
     
     private func startPolling() {
-        pollingTask = Task {
+        pollingTask = Task { [weak self] in
             while !Task.isCancelled {
+                guard let self = self else { break }
+
                 // Ensure we're still listening before proceeding
                 let listening = await MainActor.run { self.isListening }
                 guard listening else { break }
-                
-                await performPeriodicCheck()
-                
+
+                await self.performPeriodicCheck()
+
                 // Use the reduced polling interval (1 second)
-                try? await Task.sleep(for: .seconds(pollingInterval))
+                try? await Task.sleep(for: .seconds(self.pollingInterval))
             }
         }
     }
@@ -147,26 +152,22 @@ class YabaiSignalListener: ObservableObject {
     }
     
     // MARK: - Signal-Based Updates
-    
-    @objc private func handleDistributedNotification(_ notification: Notification) {
-        Task {
-            await handleSignalUpdate(notification)
+
+    private func handleDistributedNotification() {
+        Task { [weak self] in
+            await self?.handleSignalUpdate()
         }
     }
-    
+
     @MainActor
-    private func handleSignalUpdate(_ notification: Notification) async {
-        guard let source = notification.object as? String else { return }
-        
+    private func handleSignalUpdate() async {
         // Handle external signal updates immediately
-        if source == "signal_received" {
-            lastSignalReceived = "external_signal"
-            signalCount += 1
-            
-            // Immediate update without waiting for polling
-            await stackDetector.updateStacks()
-            logger.debug("Immediate update triggered by external signal")
-        }
+        lastSignalReceived = "external_signal"
+        signalCount += 1
+
+        // Immediate update without waiting for polling
+        await stackDetector.updateStacks()
+        logger.debug("Immediate update triggered by external signal")
     }
     
     // MARK: - Manual Signal Handling

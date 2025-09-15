@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import Combine
 import os
 
 // MARK: - Logging
@@ -11,8 +12,10 @@ private let logger = Logger(subsystem: "sh.mackie.stackline", category: "configu
 @MainActor
 final class ConfigurationManager: ObservableObject {
     @Published var config: StacklineConfiguration
-    
+
     private let configURL: URL
+    private var saveDebouncer: AnyCancellable?
+    private var pendingSave = false
     
     init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -32,6 +35,21 @@ final class ConfigurationManager: ObservableObject {
     }
     
     func save() {
+        // Debounce saves to avoid excessive disk writes
+        pendingSave = true
+        saveDebouncer?.cancel()
+
+        saveDebouncer = Just(())
+            .delay(for: .milliseconds(500), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.performSave()
+            }
+    }
+
+    private func performSave() {
+        guard pendingSave else { return }
+        pendingSave = false
+
         do {
             let data = try JSONEncoder().encode(config)
             try data.write(to: configURL)
@@ -43,7 +61,7 @@ final class ConfigurationManager: ObservableObject {
     
     func reset() {
         config = .default
-        save()
+        performSave() // Save immediately for reset
         logger.info("Configuration reset to defaults")
     }
     
@@ -88,5 +106,11 @@ final class ConfigurationManager: ObservableObject {
         config.behavior[keyPath: keyPath] = value
         save()
     }
-    
+
+
+    deinit {
+        saveDebouncer?.cancel()
+        // Final save will be handled by the debouncer if needed
+        // We can't access @MainActor properties in deinit
+    }
 }

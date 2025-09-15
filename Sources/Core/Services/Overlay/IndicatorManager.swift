@@ -43,11 +43,13 @@ final class IndicatorManager: ObservableObject {
     private func showRelativeOverlays(for stacks: [WindowStack]) {
         let currentStackIds = Set(stacks.map(\.id))
         let existingStackIds = Set(overlayWindows.keys)
-        
+
         // Remove old windows for stacks that no longer exist
         for oldStackId in existingStackIds.subtracting(currentStackIds) {
-            overlayWindows[oldStackId]?.hide()
-            overlayWindows[oldStackId]?.close()
+            if let window = overlayWindows[oldStackId] {
+                window.hide()
+                window.close()
+            }
             overlayWindows.removeValue(forKey: oldStackId)
         }
         
@@ -85,8 +87,9 @@ final class IndicatorManager: ObservableObject {
     
     private func handleWindowClick(_ windowId: Int) {
         guard configManager.config.behavior.clickToFocus else { return }
-        
-        Task {
+
+        Task { [weak self] in
+            guard self != nil else { return }
             do {
                 let yabaiInterface = YabaiInterface()
                 try await yabaiInterface.focusWindow(windowId)
@@ -120,8 +123,13 @@ final class IndicatorManager: ObservableObject {
     }
     
     deinit {
-        for window in overlayWindows.values {
-            Task { @MainActor in
+        // Clean up all windows - must be done on main thread
+        // Since deinit can't access @MainActor methods directly,
+        // we schedule the cleanup but can't wait for it
+        let windows = Array(overlayWindows.values)
+        DispatchQueue.main.async {
+            for window in windows {
+                window.hide()
                 window.close()
             }
         }

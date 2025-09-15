@@ -20,24 +20,30 @@ class SignalManager: ObservableObject {
     private var signalQueue: Set<String> = []
     private var isProcessingSignals = false
     
+    private var distributedNotificationObserver: NSObjectProtocol?
+
     init(stackDetector: StackDetector, yabaiInterface: YabaiInterface) {
         self.stackDetector = stackDetector
         self.yabaiInterface = yabaiInterface
-        
+
         // Listen for distributed notifications
-        DistributedNotificationCenter.default().addObserver(
-            self,
-            selector: #selector(handleExternalSignal),
-            name: Notification.Name("StacklineExternalSignal"),
+        distributedNotificationObserver = DistributedNotificationCenter.default().addObserver(
+            forName: Notification.Name("StacklineExternalSignal"),
             object: nil,
-            suspensionBehavior: .deliverImmediately
-        )
-        
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor in
+                self?.handleExternalSignalNotification(notification)
+            }
+        }
+
         logger.debug("SignalManager initialized")
     }
-    
+
     deinit {
-        DistributedNotificationCenter.default().removeObserver(self)
+        if let observer = distributedNotificationObserver {
+            DistributedNotificationCenter.default().removeObserver(observer)
+        }
         logger.debug("SignalManager deinitialized")
     }
     
@@ -55,16 +61,16 @@ class SignalManager: ObservableObject {
         logger.info("SignalManager stopped")
     }
     
-    @objc private func handleExternalSignal(_ notification: Notification) {
+    private func handleExternalSignalNotification(_ notification: Notification) {
         logger.debug("SignalManager: handleExternalSignal called")
         guard let event = notification.object as? String else {
             logger.warning("SignalManager: No event string in notification")
             return
         }
-        
+
         logger.debug("SignalManager: Processing external signal: \(event)")
-        Task { @MainActor in
-            handleSignal(event)
+        Task { @MainActor [weak self] in
+            self?.handleSignal(event)
         }
     }
     
@@ -78,8 +84,8 @@ class SignalManager: ObservableObject {
         signalQueue.insert(event)
         
         // Process signals without blocking
-        Task {
-            await processSignalQueue()
+        Task { [weak self] in
+            await self?.processSignalQueue()
         }
     }
     
