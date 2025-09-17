@@ -78,22 +78,26 @@ func showHelp() {
 }
 
 func handleSignalCommand(_ args: [String]) {
-    guard args.count >= 2 else {
+    guard args.count >= 3 else {
         logger.error("Usage: stackline handle-signal <event>")
         print("Usage: stackline handle-signal <event>")
         exit(1)
     }
-    
-    let event = args[1]
-    
-    // Send signal directly via distributed notification
-    DistributedNotificationCenter.default().post(
-        name: Notification.Name("StacklineExternalSignal"),
-        object: event
-    )
-    
-    logger.info("Signal '\(event)' sent successfully")
-    print("Signal '\(event)' sent successfully")
+
+    let event = args[2]
+
+    // Send signal via socket
+    let message = "signal:\(event)"
+    let success = SimpleSocketClient.sendMessage(message)
+
+    if success {
+        logger.info("Signal '\(event)' sent successfully")
+        print("Signal '\(event)' sent successfully")
+    } else {
+        logger.error("Failed to send signal '\(event)' - is Stackline running?")
+        print("Failed to send signal '\(event)' - is Stackline running?")
+        exit(1)
+    }
 }
 
 func runDaemon() {
@@ -106,95 +110,33 @@ func runDaemon() {
 }
 
 func testSignalClient() {
-    logger.info("Testing signal system...")
-    print("Testing signal system...")
-    
-    // Test direct signal posting
-    logger.debug("Testing direct signal posting...")
-    print("Testing direct signal posting...")
-    DistributedNotificationCenter.default().post(
-        name: Notification.Name("StacklineExternalSignal"),
-        object: "test_signal"
-    )
-    logger.info("✓ Direct signal posting works")
-    print("✓ Direct signal posting works")
-    
-    logger.info("✓ Signal system test completed")
-    print("✓ Signal system test completed")
-}
+    logger.info("Testing socket system...")
+    print("Testing socket system...")
 
-// MARK: - Signal Management Helper
+    // Test socket connection
+    logger.debug("Testing socket connection...")
+    print("Testing socket connection...")
 
-func addYabaiSignals() {
-    logger.info("Adding Yabai signals...")
-    print("Adding Yabai signals...")
-    
-    let signals = [
-        "window_focused",
-        "window_moved",
-        "window_resized",
-        "window_destroyed",
-        "window_created",
-        "space_changed"
-    ]
-    
-    for signal in signals {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/yabai")
-        task.arguments = ["-m", "signal", "--add", "event=\(signal)", "action=stackline handle-signal \(signal)"]
-        
-        do {
-            try task.run()
-            task.waitUntilExit()
-            
-            if task.terminationStatus == 0 {
-                logger.info("✓ Added signal: \(signal)")
-                print("✓ Added signal: \(signal)")
-            } else {
-                logger.error("✗ Failed to add signal: \(signal)")
-                print("✗ Failed to add signal: \(signal)")
-            }
-        } catch {
-            logger.error("✗ Error adding signal \(signal): \(error.localizedDescription)")
-            print("✗ Error adding signal \(signal): \(error)")
+    if SimpleSocketClient.ping() {
+        logger.info("✓ Socket connection successful")
+        print("✓ Socket connection successful")
+
+        // Test sending a signal
+        if SimpleSocketClient.sendMessage("signal:test_signal") {
+            logger.info("✓ Test signal sent successfully")
+            print("✓ Test signal sent successfully")
+        } else {
+            logger.error("✗ Failed to send test signal")
+            print("✗ Failed to send test signal")
         }
+    } else {
+        logger.error("✗ Socket connection failed - is Stackline running?")
+        print("✗ Socket connection failed - is Stackline running?")
+        exit(1)
     }
-}
 
-func removeYabaiSignals() {
-    logger.info("Removing Yabai signals...")
-    print("Removing Yabai signals...")
-    
-    let signals = [
-        "window_focused",
-        "window_moved",
-        "window_resized",
-        "window_destroyed",
-        "window_created",
-        "space_changed"
-    ]
-    
-    for signal in signals {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/yabai")
-        task.arguments = ["-m", "signal", "--remove", "event=\(signal)"]
-        
-        do {
-            try task.run()
-            task.waitUntilExit()
-            
-            if task.terminationStatus == 0 {
-                logger.info("✓ Removed signal: \(signal)")
-                print("✓ Removed signal: \(signal)")
-            } else {
-                logger.warning("✗ Failed to remove signal: \(signal)")
-                print("✗ Failed to remove signal: \(signal)")
-            }
-        } catch {
-            logger.error("✗ Error removing signal \(signal): \(error.localizedDescription)")
-            print("✗ Error removing signal \(signal): \(error)")
-        }
-    }
+    logger.info("✓ Socket system test completed")
+    print("✓ Socket system test completed")
 }
 
 func cleanupStacklineSignals() {
@@ -203,6 +145,7 @@ func cleanupStacklineSignals() {
     let yabaiInterface = YabaiInterface()
     yabaiInterface.performSignalCleanup(timeout: 20.0)
 }
+
 
 // MARK: - Main Entry Point
 

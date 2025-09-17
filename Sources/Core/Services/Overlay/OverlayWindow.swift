@@ -56,16 +56,20 @@ final class OverlayWindow: NSWindow {
             config: configManager.config,
             onWindowClick: onWindowClick
         )
-        
+
+        // Remove old view properly
         if let oldView = hostingView {
             oldView.removeFromSuperview()
+            // Clear the reference
+            hostingView = nil
         }
-        
-        hostingView = NSHostingView(rootView: contentView)
-        hostingView?.wantsLayer = true
-        hostingView?.layer?.masksToBounds = true
-        
-        self.contentView = hostingView
+
+        let newHostingView = NSHostingView(rootView: contentView)
+        newHostingView.wantsLayer = true
+        newHostingView.layer?.masksToBounds = true
+
+        hostingView = newHostingView
+        self.contentView = newHostingView
     }
     
     func positionRelativeToStack(_ stack: WindowStack) {
@@ -196,8 +200,24 @@ final class OverlayWindow: NSWindow {
         }
     }
     
-    deinit {
+    func cleanup() {
+        // Remove hosting view
         hostingView?.removeFromSuperview()
         hostingView = nil
+
+        // Clear stacks and positions
+        currentStacks.removeAll()
+        lastStackPositions.removeAll()
+
+        // Hide and close window
+        self.orderOut(nil)
+        self.contentView = nil
+
+        logger.debug("OverlayWindow cleanup completed")
+    }
+
+    deinit {
+        // Note: cleanup() should be called explicitly before deallocation
+        logger.debug("OverlayWindow deinitialized")
     }
 }

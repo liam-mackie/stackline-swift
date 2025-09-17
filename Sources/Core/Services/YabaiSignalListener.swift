@@ -20,33 +20,23 @@ class YabaiSignalListener: ObservableObject {
     private var lastStackState: [String: Int] = [:] // stackId -> windowCount
     private var lastSignalCheck: Date = Date.distantPast
     private var isSettingUpSignals: Bool = false
-    private var distributedNotificationObserver: NSObjectProtocol?
-    
+
     private let pollingInterval: TimeInterval = 1.0 // 1 second
     private let signalCheckInterval: TimeInterval = 30.0 // Check signals every 30 seconds
     private let signalIdentifier = "mackie-sh-stackline"
-    
+
     init(yabaiInterface: YabaiInterface, stackDetector: StackDetector) {
         self.yabaiInterface = yabaiInterface
         self.stackDetector = stackDetector
-
-        // Listen for distributed notifications from external signals
-        distributedNotificationObserver = DistributedNotificationCenter.default().addObserver(
-            forName: Notification.Name("StacklineUpdate"),
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.handleDistributedNotification()
-        }
 
         logger.debug("YabaiSignalListener initialized")
     }
     
     deinit {
-        stopListening()
-        if let observer = distributedNotificationObserver {
-            DistributedNotificationCenter.default().removeObserver(observer)
-        }
+        // Cancel polling task immediately
+        pollingTask?.cancel()
+        pollingTask = nil
+        isListening = false
 
         // Note: Signal cleanup will be handled by app termination handlers
         // Async cleanup in deinit can be problematic, so we rely on app-level cleanup
@@ -84,17 +74,31 @@ class YabaiSignalListener: ObservableObject {
     private func startPolling() {
         pollingTask = Task { [weak self] in
             while !Task.isCancelled {
-                guard let self = self else { break }
+                guard let self = self else {
+                    logger.debug("Polling task: self is nil, exiting")
+                    break
+                }
 
                 // Ensure we're still listening before proceeding
-                let listening = await MainActor.run { self.isListening }
-                guard listening else { break }
+                let listening = await MainActor.run { [weak self] in
+                    self?.isListening ?? false
+                }
+                guard listening else {
+                    logger.debug("Polling task: no longer listening, exiting")
+                    break
+                }
 
                 await self.performPeriodicCheck()
 
                 // Use the reduced polling interval (1 second)
-                try? await Task.sleep(for: .seconds(self.pollingInterval))
+                do {
+                    try await Task.sleep(for: .seconds(self.pollingInterval))
+                } catch {
+                    logger.debug("Polling task cancelled during sleep")
+                    break
+                }
             }
+            logger.debug("Polling task ended cleanly")
         }
     }
     
@@ -149,25 +153,6 @@ class YabaiSignalListener: ObservableObject {
         }
         
         return hasChanges
-    }
-    
-    // MARK: - Signal-Based Updates
-
-    private func handleDistributedNotification() {
-        Task { [weak self] in
-            await self?.handleSignalUpdate()
-        }
-    }
-
-    @MainActor
-    private func handleSignalUpdate() async {
-        // Handle external signal updates immediately
-        lastSignalReceived = "external_signal"
-        signalCount += 1
-
-        // Immediate update without waiting for polling
-        await stackDetector.updateStacks()
-        logger.debug("Immediate update triggered by external signal")
     }
     
     // MARK: - Manual Signal Handling
@@ -355,9 +340,10 @@ class YabaiSignalListener: ObservableObject {
         for event in eventsToAdd {
             do {
                 // Create action command with our identifier
-                let action = "\(binaryPath) handle-signal \(event) # \(signalIdentifier)"
+                let action = "\(binaryPath) handle-signal \(event)"
+                let actionSignalId = "\(signalIdentifier)-\(event)"
                 
-                try await yabaiInterface.addSignal(event: event, action: action)
+                try await yabaiInterface.addSignal(event: event, action: action, label: actionSignalId)
                 logger.debug("Added signal: \(event) -> \(action)")
             } catch {
                 logger.error("Failed to add signal \(event): \(error.localizedDescription)")
@@ -444,23 +430,4 @@ struct SignalStats {
     let pollingInterval: TimeInterval
 }
 
-// MARK: - Command Line Interface
-
-extension YabaiSignalListener {
-    static func handleCommandLineSignal(_ args: [String]) {
-        guard args.count >= 2 else {
-            logger.error("Usage: stackline signal <event>")
-            return
-        }
-        
-        let event = args[1]
-        
-        // Post a notification that can be picked up by the running app
-        DistributedNotificationCenter.default().post(
-            name: Notification.Name("StacklineExternalSignal"),
-            object: event
-        )
-        
-        logger.info("External signal posted: \(event)")
-    }
-} 
+ 

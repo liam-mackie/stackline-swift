@@ -51,13 +51,13 @@ struct StacklineApp: App {
             }
         }
         
-        // Menu bar
+        // Menu bar - using optimized version to prevent memory growth
         MenuBarExtra("Stackline", systemImage: "rectangle.stack") {
             if coordinator.isCheckingSingleton {
                 Text("Checking for other instances...")
                     .foregroundColor(.secondary)
             } else if coordinator.isSingletonValid {
-                MenuBarView(
+                OptimizedMenuBarView(
                     coordinator: coordinator,
                     onOpenConfig: {
                         coordinator.openConfigurationWindow()
@@ -70,7 +70,7 @@ struct StacklineApp: App {
                 VStack {
                     Text("Another instance is running")
                         .foregroundColor(.secondary)
-                    
+
                     Button("Close This Instance") {
                         NSApplication.shared.terminate(nil)
                     }

@@ -48,6 +48,7 @@ final class IndicatorManager: ObservableObject {
         for oldStackId in existingStackIds.subtracting(currentStackIds) {
             if let window = overlayWindows[oldStackId] {
                 window.hide()
+                window.cleanup()
                 window.close()
             }
             overlayWindows.removeValue(forKey: oldStackId)
@@ -88,8 +89,7 @@ final class IndicatorManager: ObservableObject {
     private func handleWindowClick(_ windowId: Int) {
         guard configManager.config.behavior.clickToFocus else { return }
 
-        Task { [weak self] in
-            guard self != nil else { return }
+        Task { @Sendable in
             do {
                 let yabaiInterface = YabaiInterface()
                 try await yabaiInterface.focusWindow(windowId)
@@ -122,18 +122,22 @@ final class IndicatorManager: ObservableObject {
         updateIndicators(for: currentStacks)
     }
     
-    deinit {
-        // Clean up all windows - must be done on main thread
-        // Since deinit can't access @MainActor methods directly,
-        // we schedule the cleanup but can't wait for it
-        let windows = Array(overlayWindows.values)
-        DispatchQueue.main.async {
-            for window in windows {
-                window.hide()
-                window.close()
-            }
+    func cleanup() {
+        // Clean up all windows properly
+        for (_, window) in overlayWindows {
+            window.hide()
+            window.cleanup()
+            window.close()
         }
         overlayWindows.removeAll()
+        currentStacks.removeAll()
         isWindowVisible = false
+        logger.debug("IndicatorManager cleanup completed")
+    }
+
+    deinit {
+        // Note: cleanup() should be called explicitly before deallocation
+        // This ensures proper cleanup happens on the main thread
+        logger.debug("IndicatorManager deinitialized")
     }
 }

@@ -133,8 +133,8 @@ class YabaiInterface: ObservableObject {
     
     // MARK: - Signal Management
     
-    func addSignal(event: String, action: String) async throws {
-        _ = try await executeYabaiCommand(["signal", "--add", "event=\(event)", "action=\(action)"])
+    func addSignal(event: String, action: String, label: String) async throws {
+        _ = try await executeYabaiCommand(["signal", "--add", "event=\(event)", "action=\(action)", "label=\(label)", "active=yes"])
     }
     
     func removeSignal(event: String) async throws {
@@ -166,7 +166,7 @@ class YabaiInterface: ObservableObject {
                 
                 // Find signals that contain our identifier
                 let ourSignals = signals.filter { signal in
-                    signal.action.contains("mackie-sh-stackline")
+                    signal.label.contains("mackie-sh-stackline")
                 }
                 
                 if ourSignals.isEmpty {
@@ -212,15 +212,25 @@ class YabaiInterface: ObservableObject {
         return try await withCheckedThrowingContinuation { continuation in
             let process = Process()
             let pipe = Pipe()
-            
+
             process.executableURL = URL(fileURLWithPath: yabaiPath)
             process.arguments = ["-m"] + arguments
             process.standardOutput = pipe
             process.standardError = pipe
-            
-            process.terminationHandler = { process in
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                
+
+            // Use weak reference to avoid retain cycle
+            process.terminationHandler = { [weak pipe] process in
+                guard let pipe = pipe else {
+                    continuation.resume(throwing: YabaiError.commandFailed("Pipe deallocated"))
+                    return
+                }
+
+                let fileHandle = pipe.fileHandleForReading
+                let data = fileHandle.readDataToEndOfFile()
+
+                // Explicitly close the file handle
+                try? fileHandle.close()
+
                 if process.terminationStatus == 0 {
                     continuation.resume(returning: data)
                 } else {
@@ -228,10 +238,12 @@ class YabaiInterface: ObservableObject {
                     continuation.resume(throwing: YabaiError.commandFailed(errorMessage))
                 }
             }
-            
+
             do {
                 try process.run()
             } catch {
+                // Close file handle on error
+                try? pipe.fileHandleForReading.close()
                 continuation.resume(throwing: YabaiError.processError(error))
             }
         }
@@ -286,28 +298,34 @@ extension YabaiInterface {
             "/usr/bin/yabai",
             "/bin/yabai"
         ]
-        
+
         for path in possiblePaths {
             if FileManager.default.fileExists(atPath: path) {
                 logger.debug("Found yabai executable at: \(path)")
                 return path
             }
         }
-        
+
         // Try to find yabai in PATH
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/which")
         process.arguments = ["yabai"]
-        
+
         let pipe = Pipe()
         process.standardOutput = pipe
-        
+
         do {
             try process.run()
             process.waitUntilExit()
-            
+
+            let fileHandle = pipe.fileHandleForReading
+            defer {
+                // Always close the file handle
+                try? fileHandle.close()
+            }
+
             if process.terminationStatus == 0 {
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let data = fileHandle.readDataToEndOfFile()
                 let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
                 if let path = path {
                     logger.debug("Found yabai executable via PATH: \(path)")
@@ -317,7 +335,7 @@ extension YabaiInterface {
         } catch {
             logger.error("Error finding yabai executable: \(error.localizedDescription)")
         }
-        
+
         logger.warning("Could not find yabai executable in standard locations")
         return nil
     }

@@ -271,20 +271,23 @@ class CoordinateSystemHandler {
 class StackDetector: ObservableObject {
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Stackline", category: "StackDetector")
     private let yabaiInterface = YabaiInterface()
-    
+
     @Published private(set) var detectedStacks: [WindowStack] = []
     @Published private(set) var lastUpdateTime = Date()
-    
+
     // Track the last focused window for each stack to maintain visibility state
     private var stackVisibilityState: [String: Int] = [:]
-    
+
     // Track window focus changes to update stack visibility
     private var lastWindowFocusState: [Int: Bool] = [:]
-    
+
+    // Timer for periodic updates
+    private var updateTimer: Timer?
+
     // Detection parameters
     private let positionTolerance: Double = 5.0  // Pixels tolerance for considering windows at same position
     private let sameRowTolerance: Double = 50.0  // Pixels tolerance for considering windows in same row
-    
+
     init() {
         // Log screen configuration for debugging multi-screen setups
         CoordinateSystemHandler.logScreenConfiguration()
@@ -300,15 +303,17 @@ class StackDetector: ObservableObject {
     }
     
     func stopDetection() {
-        // Implementation for stopping periodic updates if needed
+        updateTimer?.invalidate()
+        updateTimer = nil
     }
     
     // MARK: - Stack Detection Logic
     
     private func setupPeriodicUpdates() {
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            Task { @MainActor in
-                await self.updateStacks()
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            Task { @MainActor [weak self] in
+                await self?.updateStacks()
             }
         }
     }
@@ -614,6 +619,14 @@ class StackDetector: ObservableObject {
     func getVisibilityState() -> [String: Int] {
         return stackVisibilityState
     }
+
+    deinit {
+        updateTimer?.invalidate()
+        updateTimer = nil
+        stackVisibilityState.removeAll()
+        lastWindowFocusState.removeAll()
+        logger.debug("StackDetector deinitialized")
+    }
 }
 
 // MARK: - Helper Types
@@ -663,8 +676,8 @@ extension StackDetector {
     /// Forces an immediate stack detection update
     /// This bypasses the normal timer-based updates
     func triggerImmediateUpdate() {
-        Task {
-            await updateStacks()
+        Task { [weak self] in
+            await self?.updateStacks()
         }
     }
 } 

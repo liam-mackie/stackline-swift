@@ -271,7 +271,7 @@ struct YabaiSignal: Codable, Identifiable {
     let label: String
     let app: String
     let title: String
-    let active: String?  // This can be null, so optional String
+    let active: Bool?  // This can be null, so optional String
     let event: String
     let action: String
     
