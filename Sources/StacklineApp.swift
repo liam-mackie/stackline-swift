@@ -11,85 +11,39 @@ private let logger = Logger(subsystem: "sh.mackie.stackline", category: "app")
 
 struct StacklineApp: App {
     @StateObject private var coordinator = AppCoordinator()
-    
+
+    init() {
+        // Initialize coordinator immediately on app launch
+        // This ensures services start right away without waiting for menu interaction
+        logger.info("Stackline app initializing")
+    }
+
     var body: some Scene {
-        // Main window using Window scene for better control
-        Window("Stackline", id: coordinator.mainWindowId) {
-            if coordinator.isCheckingSingleton {
-                LoadingView()
-                    .onAppear {
-                        coordinator.checkSingletonStatus()
+        // Main window using Window scene to prevent NSHostingView recreation leaks
+        Window("Stackline", id: "main") {
+            ContentView(coordinator: coordinator)
+                .onAppear {
+                    if !coordinator.isAppInitialized {
+                        coordinator.initializeApp()
                     }
-            } else if coordinator.isSingletonValid {
-                ContentView(coordinator: coordinator)
-                    .onAppear {
-                        handleMainWindowAppearance()
-                        
-                        if !coordinator.isAppInitialized {
-                            coordinator.initializeApp()
-                            // Set up close handler for the initial window if it's shown at launch
-                            coordinator.setupInitialWindowIfNeeded()
-                        }
-                    }
-            } else {
-                SingletonErrorView()
-            }
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
         .defaultSize(width: 700, height: 600)
-        .commands {
-            CommandGroup(replacing: .newItem) {
-                Button("Show Main Window") {
-                    coordinator.openMainWindow()
-                }
-            }
-            CommandGroup(replacing: .appInfo) {
-                Button("About Stackline") {
-                    coordinator.showAboutPanel()
-                }
-            }
-        }
-        
-        // Menu bar - using optimized version to prevent memory growth
-        MenuBarExtra("Stackline", systemImage: "rectangle.stack") {
-            if coordinator.isCheckingSingleton {
-                Text("Checking for other instances...")
-                    .foregroundColor(.secondary)
-            } else if coordinator.isSingletonValid {
-                OptimizedMenuBarView(
-                    coordinator: coordinator,
-                    onOpenConfig: {
-                        coordinator.openConfigurationWindow()
-                    },
-                    onOpenMain: {
-                        coordinator.openMainWindow()
-                    }
-                )
-            } else {
-                VStack {
-                    Text("Another instance is running")
-                        .foregroundColor(.secondary)
 
-                    Button("Close This Instance") {
-                        NSApplication.shared.terminate(nil)
-                    }
-                }
-            }
+        // Configuration window as separate WindowGroup
+        WindowGroup("Configuration", id: "config") {
+            ConfigurationView(configManager: coordinator.configManager)
+        }
+        .windowStyle(.titleBar)
+        .windowResizability(.contentSize)
+        .defaultSize(width: 450, height: 400)
+
+        // MenuBarExtra as primary interface
+        MenuBarExtra("Stackline", systemImage: "rectangle.stack") {
+            MenuView(coordinator: coordinator)
         }
         .menuBarExtraStyle(.menu)
-    }
-    
-    private func handleMainWindowAppearance() {
-        if !coordinator.configManager.config.behavior.showMainWindowAtLaunch {
-            let windows = NSApplication.shared.windows
-            for window in windows {
-                if window.styleMask.contains(.titled) && window.contentView != nil {
-                    window.alphaValue = 0.0
-                    window.orderOut(nil)
-                    logger.debug("Hidden main window at launch")
-                }
-            }
-        }
     }
 }

@@ -111,33 +111,28 @@ struct WindowStack: Identifiable, Equatable {
     let space: Int
     let display: Int
     let lastFocusedWindowId: Int? // Track which window was last focused in this stack
-    
+
+    // Cache computed properties to avoid recalculation
+    private var _focusedWindow: YabaiWindow?
+    private var _visibleWindow: YabaiWindow?
+
     var focusedWindow: YabaiWindow? {
-        return windows.first { $0.isFocused }
+        return _focusedWindow
     }
-    
+
     var visibleWindow: YabaiWindow? {
-        // Return the window that was last focused in this stack
-        // This is the window that should be visible/highlighted
-        if let lastFocusedId = lastFocusedWindowId,
-           let trackedWindow = windows.first(where: { $0.id == lastFocusedId }) {
-            return trackedWindow
-        }
-        
-        // Fallback: if no tracking data, use the currently focused window
-        // or the first window with lowest stack index
-        return focusedWindow ?? windows.first
+        return _visibleWindow
     }
-    
+
     var topmostWindow: YabaiWindow? {
         // Deprecated: Use visibleWindow instead
         return visibleWindow
     }
-    
+
     var visibleWindows: [YabaiWindow] {
         return windows.filter { $0.isVisible }
     }
-    
+
     var count: Int {
         return windows.count
     }
@@ -145,11 +140,22 @@ struct WindowStack: Identifiable, Equatable {
     init(windows: [YabaiWindow], lastFocusedWindowId: Int? = nil) {
         self.windows = windows
         self.lastFocusedWindowId = lastFocusedWindowId
-        
+
         // Use the frame of the first window as the representative frame
         self.frame = windows.first?.frame ?? WindowFrame(x: 0, y: 0, w: 0, h: 0)
         self.space = windows.first?.space ?? 0
         self.display = windows.first?.display ?? 0
+
+        // Cache computed properties
+        self._focusedWindow = windows.first { $0.isFocused }
+
+        // Cache visible window computation
+        if let lastFocusedId = lastFocusedWindowId,
+           let trackedWindow = windows.first(where: { $0.id == lastFocusedId }) {
+            self._visibleWindow = trackedWindow
+        } else {
+            self._visibleWindow = self._focusedWindow ?? windows.first
+        }
         
         // Create a stable ID based on the stack position and space using display-relative coordinates
         // This ensures consistency with StackDetector's coordinate system handling using Core Graphics

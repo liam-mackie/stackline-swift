@@ -25,20 +25,22 @@ struct PillIndicatorView: View {
     let stack: WindowStack
     let config: StacklineConfiguration
     let onWindowClick: (Int) -> Void
-    
+
     private func isVisibleWindow(_ window: YabaiWindow) -> Bool {
         return stack.visibleWindow?.id == window.id
     }
-    
+
     var body: some View {
         DirectionalStack(direction: config.appearance.iconDirection, spacing: CGFloat(config.appearance.spacing)) {
             pillButtons
         }
     }
-    
+
     @ViewBuilder
     private var pillButtons: some View {
-        ForEach(Array(stack.windows.enumerated()), id: \.element.id) { index, window in
+        // Use indices to prevent ForEach state accumulation
+        ForEach(0..<stack.windows.count, id: \.self) { index in
+            let window = stack.windows[index]
             Button(action: {
                 onWindowClick(window.id)
             }) {
@@ -50,6 +52,7 @@ struct PillIndicatorView: View {
                     )
             }
             .buttonStyle(.plain)
+            .id(window.id) // Stable ID for view recycling
         }
     }
 }
@@ -60,20 +63,22 @@ struct IconIndicatorView: View {
     let stack: WindowStack
     let config: StacklineConfiguration
     let onWindowClick: (Int) -> Void
-    
+
     private func isVisibleWindow(_ window: YabaiWindow) -> Bool {
         return stack.visibleWindow?.id == window.id
     }
-    
+
     var body: some View {
         DirectionalStack(direction: config.appearance.iconDirection, spacing: CGFloat(config.appearance.spacing)) {
             iconButtons
         }
     }
-    
+
     @ViewBuilder
     private var iconButtons: some View {
-        ForEach(Array(stack.windows.enumerated()), id: \.element.id) { index, window in
+        // Use indices to prevent ForEach state accumulation
+        ForEach(0..<stack.windows.count, id: \.self) { index in
+            let window = stack.windows[index]
             Button(action: {
                 onWindowClick(window.id)
             }) {
@@ -81,6 +86,7 @@ struct IconIndicatorView: View {
                     .opacity(isVisibleWindow(window) ? 1.0 : 0.4)
             }
             .buttonStyle(.plain)
+            .id(window.id) // Stable ID for view recycling
         }
     }
 }
@@ -91,27 +97,30 @@ struct MinimalIndicatorView: View {
     let stack: WindowStack
     let config: StacklineConfiguration
     let onWindowClick: (Int) -> Void
-    
+
     private func isVisibleWindow(_ window: YabaiWindow) -> Bool {
         return stack.visibleWindow?.id == window.id
     }
-    
+
     var body: some View {
         DirectionalStack(direction: config.appearance.iconDirection, spacing: CGFloat(config.appearance.spacing)) {
             minimalButtons
             minimalText
         }
     }
-    
+
     @ViewBuilder
     private var minimalButtons: some View {
         DirectionalStack(direction: config.appearance.iconDirection, spacing: CGFloat(config.appearance.spacing)) {
-            ForEach(Array(stack.windows.enumerated()), id: \.element.id) { index, window in
+            // Use indices to prevent ForEach state accumulation
+            ForEach(0..<stack.windows.count, id: \.self) { index in
+                let window = stack.windows[index]
                 minimalButton(for: window, isFocused: isVisibleWindow(window))
+                    .id(window.id) // Stable ID for view recycling
             }
         }
     }
-    
+
     @ViewBuilder
     private func minimalButton(for window: YabaiWindow, isFocused: Bool) -> some View {
         Button(action: {
@@ -123,7 +132,7 @@ struct MinimalIndicatorView: View {
         }
         .buttonStyle(.plain)
     }
-    
+
     @ViewBuilder
     private var minimalText: some View {
         Text("\(stack.windows.count)")

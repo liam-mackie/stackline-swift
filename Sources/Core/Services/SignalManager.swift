@@ -20,6 +20,7 @@ class SignalManager: ObservableObject {
 
     private var signalQueue: Set<String> = []
     private var isProcessingSignals = false
+    private var processTask: Task<Void, Never>?
 
     init(stackDetector: StackDetector, yabaiInterface: YabaiInterface) {
         self.stackDetector = stackDetector
@@ -32,6 +33,10 @@ class SignalManager: ObservableObject {
     }
 
     deinit {
+        // Cancel any ongoing processing task
+        processTask?.cancel()
+        processTask = nil
+
         // Note: socketServer cleanup happens in its own deinit
         logger.debug("SignalManager deinitialized")
     }
@@ -51,6 +56,10 @@ class SignalManager: ObservableObject {
     func stopSignalHandling() async {
         guard isRunning else { return }
 
+        // Cancel processing task
+        processTask?.cancel()
+        processTask = nil
+
         socketServer.stopListening()
         isRunning = false
         logger.info("SignalManager stopped")
@@ -65,8 +74,9 @@ class SignalManager: ObservableObject {
         // Add to queue to prevent duplicate processing
         signalQueue.insert(event)
 
-        // Process signals without blocking
-        Task { [weak self] in
+        // Process signals without blocking (cancel previous task)
+        processTask?.cancel()
+        processTask = Task { [weak self] in
             await self?.processSignalQueue()
         }
     }

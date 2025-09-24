@@ -15,6 +15,7 @@ final class SimpleSocketServer: ObservableObject {
 
     private var socketFileDescriptor: Int32 = -1
     private var acceptTask: Task<Void, Never>?
+    private var clientTasks: Set<Task<Void, Never>> = []
     private let socketPathCopy = "/tmp/stackline.sock" // Local copy for deinit
 
     @Published var isListening = false
@@ -104,6 +105,12 @@ final class SimpleSocketServer: ObservableObject {
         acceptTask?.cancel()
         acceptTask = nil
 
+        // Cancel all client tasks
+        for task in clientTasks {
+            task.cancel()
+        }
+        clientTasks.removeAll()
+
         if socketFileDescriptor >= 0 {
             close(socketFileDescriptor)
             socketFileDescriptor = -1
@@ -142,9 +149,20 @@ final class SimpleSocketServer: ObservableObject {
                 continue
             }
 
-            // Handle client connection
-            Task { [weak self] in
-                await self?.handleClient(socket: clientSocket)
+            // Handle client connection with proper task tracking
+            let clientTask = Task { [weak self] in
+                guard let self = self else { return }
+                await self.handleClient(socket: clientSocket)
+            }
+
+            // Track the task
+            clientTasks.insert(clientTask)
+
+            // Clean up completed tasks periodically to prevent set growth
+            if clientTasks.count > 20 {
+                // Remove cancelled tasks to prevent unbounded growth
+                let activeTasks = clientTasks.filter { !$0.isCancelled }
+                clientTasks = activeTasks
             }
         }
     }
@@ -194,6 +212,11 @@ final class SimpleSocketServer: ObservableObject {
         // Clean up resources directly since we can't call async methods in deinit
         // Note: Can't modify @MainActor properties from deinit
         acceptTask?.cancel()
+
+        // Cancel all client tasks
+        for task in clientTasks {
+            task.cancel()
+        }
 
         if socketFileDescriptor >= 0 {
             close(socketFileDescriptor)

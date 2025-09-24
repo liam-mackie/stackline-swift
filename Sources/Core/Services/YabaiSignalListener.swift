@@ -72,19 +72,13 @@ class YabaiSignalListener: ObservableObject {
     // MARK: - Polling Implementation
     
     private func startPolling() {
-        pollingTask = Task { [weak self] in
-            while !Task.isCancelled {
-                guard let self = self else {
-                    logger.debug("Polling task: self is nil, exiting")
-                    break
-                }
+        // Cancel any existing polling task first
+        pollingTask?.cancel()
 
-                // Ensure we're still listening before proceeding
-                let listening = await MainActor.run { [weak self] in
-                    self?.isListening ?? false
-                }
-                guard listening else {
-                    logger.debug("Polling task: no longer listening, exiting")
+        pollingTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                guard let self = self, self.isListening else {
+                    logger.debug("Polling task: stopping (self nil or not listening)")
                     break
                 }
 

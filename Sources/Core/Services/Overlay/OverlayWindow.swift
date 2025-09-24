@@ -14,7 +14,22 @@ final class OverlayWindow: NSWindow {
     private let configManager: ConfigurationManager
     private let onWindowClick: (Int) -> Void
     private var currentStacks: [WindowStack] = []
-    private var lastStackPositions: [String: CGRect] = [:]
+    private var lastStackPositions: [String: CGRect] = [:] {
+        didSet {
+            // Limit dictionary size to prevent unbounded growth
+            if lastStackPositions.count > 50 {
+                // Keep only the 25 most recent entries
+                let sortedKeys = lastStackPositions.keys.sorted()
+                let keysToRemove = sortedKeys.dropLast(25)
+                for key in keysToRemove {
+                    lastStackPositions.removeValue(forKey: key)
+                }
+            }
+        }
+    }
+    private var viewModel: IndicatorViewModel?
+    private var lastIndicatorSize: NSSize = .zero
+    private var lastStacksHash: Int = 0
     
     init(configManager: ConfigurationManager, onWindowClick: @escaping (Int) -> Void) {
         self.configManager = configManager
@@ -51,25 +66,29 @@ final class OverlayWindow: NSWindow {
     }
     
     private func createContentView() {
-        let contentView = IndicatorContentView(
-            stacks: currentStacks,
-            config: configManager.config,
-            onWindowClick: onWindowClick
-        )
-
-        // Remove old view properly
-        if let oldView = hostingView {
-            oldView.removeFromSuperview()
-            // Clear the reference
-            hostingView = nil
+        // Create view model only once
+        if viewModel == nil {
+            viewModel = IndicatorViewModel(
+                stacks: currentStacks,
+                config: configManager.config,
+                onWindowClick: onWindowClick
+            )
+        } else {
+            // Update existing view model
+            viewModel?.updateStacks(currentStacks)
+            viewModel?.updateConfig(configManager.config)
         }
 
-        let newHostingView = NSHostingView(rootView: contentView)
-        newHostingView.wantsLayer = true
-        newHostingView.layer?.masksToBounds = true
+        // Only create hosting view if it doesn't exist
+        if hostingView == nil {
+            let contentView = IndicatorContentView(viewModel: viewModel!)
+            let newHostingView = NSHostingView(rootView: contentView)
+            newHostingView.wantsLayer = true
+            newHostingView.layer?.masksToBounds = true
 
-        hostingView = newHostingView
-        self.contentView = newHostingView
+            hostingView = newHostingView
+            self.contentView = newHostingView
+        }
     }
     
     func positionRelativeToStack(_ stack: WindowStack) {
@@ -107,24 +126,35 @@ final class OverlayWindow: NSWindow {
     
     func updateStacksEfficiently(_ stacks: [WindowStack]) {
         guard let stack = stacks.first else { return }
-        
+
+        // Check if stacks actually changed using hash
+        let newHash = computeStacksHash(stacks)
+        let stacksChanged = newHash != lastStacksHash
+
+        // Check if position changed
         let convertedStackFrame = CoordinateSystemHandler.convertCoreGraphicsToNSScreen(stack.frame)
         let lastPosition = lastStackPositions[stack.id]
-        
-        if lastPosition == nil || !convertedStackFrame.equalTo(lastPosition!) {
-            positionRelativeToStack(stack)
-            lastStackPositions[stack.id] = convertedStackFrame
+        let positionChanged = lastPosition == nil || !convertedStackFrame.equalTo(lastPosition!)
+
+        // Only reposition if frame actually changed
+        if positionChanged {
+            // Cache the indicator size to avoid recalculation
+            let newSize = IndicatorSizeCalculator.calculateSize(for: stacks, config: configManager.config)
+            if !newSize.equalTo(lastIndicatorSize) || positionChanged {
+                positionRelativeToStack(stack)
+                lastStackPositions[stack.id] = convertedStackFrame
+                lastIndicatorSize = newSize
+            }
         }
-        
-        if !stacksAreEqual(currentStacks, stacks) {
+
+        // Only update view model if stacks actually changed
+        if stacksChanged {
             self.currentStacks = stacks
-            
-            if let hostingView = hostingView {
-                hostingView.rootView = IndicatorContentView(
-                    stacks: currentStacks,
-                    config: configManager.config,
-                    onWindowClick: onWindowClick
-                )
+            self.lastStacksHash = newHash
+
+            // Update the view model instead of creating new views
+            if let viewModel = viewModel {
+                viewModel.updateStacks(stacks)
             } else {
                 createContentView()
             }
@@ -133,19 +163,17 @@ final class OverlayWindow: NSWindow {
     
     func forceUpdateStacks(_ stacks: [WindowStack]) {
         guard let stack = stacks.first else { return }
-        
+
         positionRelativeToStack(stack)
-        
+
         let stackFrame = CGRect(x: stack.frame.x, y: stack.frame.y, width: stack.frame.w, height: stack.frame.h)
         lastStackPositions[stack.id] = stackFrame
-        
+
         self.currentStacks = stacks
-        if let hostingView = hostingView {
-            hostingView.rootView = IndicatorContentView(
-                stacks: currentStacks,
-                config: configManager.config,
-                onWindowClick: onWindowClick
-            )
+
+        // Update the view model instead of creating new views
+        if let viewModel = viewModel {
+            viewModel.updateStacks(stacks)
         } else {
             createContentView()
         }
@@ -156,15 +184,20 @@ final class OverlayWindow: NSWindow {
     }
     
     private func stacksAreEqual(_ lhs: [WindowStack], _ rhs: [WindowStack]) -> Bool {
-        guard lhs.count == rhs.count else { return false }
-        
-        for (left, right) in zip(lhs, rhs) {
-            if left != right {
-                return false
+        return computeStacksHash(lhs) == computeStacksHash(rhs)
+    }
+
+    private func computeStacksHash(_ stacks: [WindowStack]) -> Int {
+        var hasher = Hasher()
+        for stack in stacks {
+            hasher.combine(stack.id)
+            hasher.combine(stack.windows.count)
+            hasher.combine(stack.visibleWindow?.id ?? -1)
+            for window in stack.windows {
+                hasher.combine(window.id)
             }
         }
-        
-        return true
+        return hasher.finalize()
     }
     
     func updateConfig() {
@@ -173,8 +206,9 @@ final class OverlayWindow: NSWindow {
         } else {
             self.collectionBehavior = [.stationary]
         }
-        
-        createContentView()
+
+        // Update the view model config instead of recreating views
+        viewModel?.updateConfig(configManager.config)
     }
     
     func show() {
@@ -201,6 +235,9 @@ final class OverlayWindow: NSWindow {
     }
     
     func cleanup() {
+        // Clear view model
+        viewModel = nil
+
         // Remove hosting view
         hostingView?.removeFromSuperview()
         hostingView = nil
@@ -208,6 +245,8 @@ final class OverlayWindow: NSWindow {
         // Clear stacks and positions
         currentStacks.removeAll()
         lastStackPositions.removeAll()
+        lastIndicatorSize = .zero
+        lastStacksHash = 0
 
         // Hide and close window
         self.orderOut(nil)
@@ -218,6 +257,7 @@ final class OverlayWindow: NSWindow {
 
     deinit {
         // Note: cleanup() should be called explicitly before deallocation
+        cleanup()
         logger.debug("OverlayWindow deinitialized")
     }
 }

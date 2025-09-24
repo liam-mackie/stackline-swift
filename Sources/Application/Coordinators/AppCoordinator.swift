@@ -28,17 +28,13 @@ final class AppCoordinator: ObservableObject {
     @Published var isCheckingSingleton = true
     
     // MARK: - Window Management
-    
+
     @Published var showMainWindow = false
-    @Published var mainWindowId = "main-window"
-    @Published var configWindow: NSWindow?
     
     // MARK: - Private Properties
 
     private var cancellables = Set<AnyCancellable>()
     private var notificationObservers: [NSObjectProtocol] = []
-    private var windowCloseObservers: [NSObjectProtocol] = []
-    private weak var currentMainWindow: NSWindow?
     
     // MARK: - Initialization
     
@@ -63,47 +59,30 @@ final class AppCoordinator: ObservableObject {
         setupObservationChains()
         
         logger.info("AppCoordinator initialized")
+
+        // Start initialization immediately for faster startup
+        Task { @MainActor in
+            self.checkSingletonStatus()
+        }
     }
     
     private func setupObservationChains() {
-        // Debounce objectWillChange notifications to reduce updates
+        // Combine all objectWillChange publishers and debounce once
         let debounceInterval = 0.1 // 100ms
 
-        yabaiInterface.objectWillChange
-            .debounce(for: .seconds(debounceInterval), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }.store(in: &cancellables)
-
-        stackDetector.objectWillChange
-            .debounce(for: .seconds(debounceInterval), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }.store(in: &cancellables)
-
-        signalListener.objectWillChange
-            .debounce(for: .seconds(debounceInterval), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }.store(in: &cancellables)
-
-        configManager.objectWillChange
-            .debounce(for: .seconds(debounceInterval), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }.store(in: &cancellables)
-
-        indicatorManager.objectWillChange
-            .debounce(for: .seconds(debounceInterval), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }.store(in: &cancellables)
-
-        signalManager.objectWillChange
-            .debounce(for: .seconds(debounceInterval), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }.store(in: &cancellables)
+        Publishers.MergeMany(
+            yabaiInterface.objectWillChange,
+            stackDetector.objectWillChange,
+            signalListener.objectWillChange,
+            configManager.objectWillChange,
+            indicatorManager.objectWillChange,
+            signalManager.objectWillChange
+        )
+        .debounce(for: .seconds(debounceInterval), scheduler: DispatchQueue.main)
+        .sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+        .store(in: &cancellables)
     }
     
     // MARK: - Singleton Management
@@ -174,19 +153,14 @@ final class AppCoordinator: ObservableObject {
         isAppInitialized = true
         logger.info("Initializing Stackline app")
         
-        // Set initial activation policy based on whether we should show main window at launch
-        if configManager.config.behavior.showMainWindowAtLaunch {
-            // Show dock icon since main window will be visible
-            NSApplication.shared.setActivationPolicy(.regular)
-        } else {
-            // Start as accessory (no dock icon) - will show dock icon when main window opens
-            NSApplication.shared.setActivationPolicy(.accessory)
-        }
+        // Always start as menu bar only app
+        NSApplication.shared.setActivationPolicy(.accessory)
         
         configManager.syncLaunchAgentStatus()
         
         setupNotifications()
         setupSignalHandlers()
+        setupWindowCloseHandler()
         
         Task {
             await signalManager.startSignalHandling()
@@ -229,8 +203,13 @@ final class AppCoordinator: ObservableObject {
     
     private func setupStackDetection() {
         logger.debug("Setting up stack detection")
-        
+
+        // Combine stack updates to avoid duplicate processing
         stackDetector.$detectedStacks
+            .removeDuplicates { oldStacks, newStacks in
+                // Only update if stacks actually changed
+                return oldStacks == newStacks
+            }
             .receive(on: DispatchQueue.main)
             .debounce(for: .milliseconds(10), scheduler: DispatchQueue.main)
             .sink { [weak self] newStacks in
@@ -239,6 +218,7 @@ final class AppCoordinator: ObservableObject {
             .store(in: &cancellables)
 
         configManager.$config
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .debounce(for: .milliseconds(250), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -271,118 +251,30 @@ final class AppCoordinator: ObservableObject {
         logger.info("Stack detection setup completed")
     }
     
-    func setupInitialWindowIfNeeded() {
-        // If we're showing the main window at launch, set up its close handler
-        if configManager.config.behavior.showMainWindowAtLaunch {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                if let mainWindow = NSApplication.shared.windows.first(where: { window in
-                    return window.level == .normal && 
-                           window.styleMask.contains(.titled) && 
-                           window.contentView != nil &&
-                           (window.title == "Stackline" || window.title == "") &&
-                           !window.title.contains("Configuration")
-                }) {
-                    self.setupWindowCloseHandler(for: mainWindow)
-                    logger.debug("Set up close handler for initial main window")
-                }
-            }
-        }
-    }
+    // No longer needed - main window is created on demand
     
     // MARK: - Window Management
     
-    func openMainWindow() {
-        // Show dock icon when main window opens
-        NSApplication.shared.setActivationPolicy(.regular)
-        
-        let mainWindow = NSApplication.shared.windows.first { window in
-            return window.level == .normal && 
-                   window.styleMask.contains(.titled) && 
-                   window.contentView != nil &&
-                   (window.title == "Stackline" || window.title == "") &&
-                   !window.title.contains("Configuration")
-        }
-        
-        if let window = mainWindow {
-            setupWindowCloseHandler(for: window)
-            window.alphaValue = 1.0
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            logger.debug("Restored and shown main window")
-        } else {
-            let newId = "main-window-\(UUID().uuidString)"
-            mainWindowId = newId
-            
-            NSApp.activate(ignoringOtherApps: true)
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                if let newWindow = NSApplication.shared.windows.first(where: { 
-                    $0.level == .normal && 
-                    $0.styleMask.contains(.titled) && 
-                    $0.contentView != nil &&
-                    ($0.title == "Stackline" || $0.title == "") &&
-                    !$0.title.contains("Configuration")
-                }) {
-                    self.setupWindowCloseHandler(for: newWindow)
-                    newWindow.makeKeyAndOrderFront(nil)
-                    NSApp.activate(ignoringOtherApps: true)
-                    logger.debug("Created and activated new main window")
-                } else {
-                    logger.warning("Failed to find newly created main window")
-                }
-            }
-        }
-    }
-    
-    private func setupWindowCloseHandler(for window: NSWindow) {
-        // Store weak reference to the window
-        currentMainWindow = window
-
-        // Remove any existing observers
-        for observer in windowCloseObservers {
-            NotificationCenter.default.removeObserver(observer)
-        }
-        windowCloseObservers.removeAll()
-
-        // Set up notification for when window closes
+    func setupWindowCloseHandler() {
+        // Set up global handler for main window closing to hide dock icon
         let observer = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
-            object: window,
+            object: nil,
             queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
+        ) { notification in
+            guard let window = notification.object as? NSWindow else { return }
+
+            // Check if this is our main window (not config window)
+            if window.title == "Stackline" && window.styleMask.contains(.titled) {
                 // Hide dock icon when main window closes
                 NSApplication.shared.setActivationPolicy(.accessory)
                 logger.debug("Main window closed, hiding dock icon")
-                self?.currentMainWindow = nil
             }
         }
-        windowCloseObservers.append(observer)
+        notificationObservers.append(observer)
     }
     
-    func openConfigurationWindow() {
-        configWindow?.close()
-        configWindow = nil
-        
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 450, height: 400),
-            styleMask: [.titled, .closable, .miniaturizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = "Stackline Configuration"
-        window.center()
-        window.isReleasedWhenClosed = true
-        
-        window.contentView = NSHostingView(
-            rootView: ConfigurationView(configManager: configManager)
-        )
-        
-        configWindow = window
-        
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
+    // Configuration window now managed by SwiftUI WindowGroup
     
     func showAboutPanel() {
         let aboutPanel = NSAlert()
@@ -424,14 +316,7 @@ final class AppCoordinator: ObservableObject {
         }
         notificationObservers.removeAll()
 
-        // Clean up window close observers
-        for observer in windowCloseObservers {
-            NotificationCenter.default.removeObserver(observer)
-        }
-        windowCloseObservers.removeAll()
-
-        // Clear window reference
-        currentMainWindow = nil
+        // Config window now managed by SwiftUI
 
         // Cancel all Combine subscriptions
         cancellables.removeAll()
@@ -466,10 +351,6 @@ final class AppCoordinator: ObservableObject {
             NotificationCenter.default.removeObserver(observer)
         }
 
-        // Clean up window close observers
-        for observer in windowCloseObservers {
-            NotificationCenter.default.removeObserver(observer)
-        }
 
         // Cancel all Combine subscriptions
         cancellables.removeAll()

@@ -276,13 +276,38 @@ class StackDetector: ObservableObject {
     @Published private(set) var lastUpdateTime = Date()
 
     // Track the last focused window for each stack to maintain visibility state
-    private var stackVisibilityState: [String: Int] = [:]
+    private var stackVisibilityState: [String: Int] = [:] {
+        didSet {
+            // Limit dictionary size to prevent unbounded growth
+            if stackVisibilityState.count > 100 {
+                // Keep only the 50 most recent entries
+                let sortedKeys = stackVisibilityState.keys.sorted()
+                let keysToRemove = sortedKeys.dropLast(50)
+                for key in keysToRemove {
+                    stackVisibilityState.removeValue(forKey: key)
+                }
+            }
+        }
+    }
 
     // Track window focus changes to update stack visibility
-    private var lastWindowFocusState: [Int: Bool] = [:]
+    private var lastWindowFocusState: [Int: Bool] = [:] {
+        didSet {
+            // Limit dictionary size to prevent unbounded growth
+            if lastWindowFocusState.count > 200 {
+                // Keep only the 100 most recent entries
+                let sortedKeys = lastWindowFocusState.keys.sorted()
+                let keysToRemove = sortedKeys.dropLast(100)
+                for key in keysToRemove {
+                    lastWindowFocusState.removeValue(forKey: key)
+                }
+            }
+        }
+    }
 
     // Timer for periodic updates
     private var updateTimer: Timer?
+    private var updateTask: Task<Void, Never>?  // Track current update task to prevent accumulation
 
     // Detection parameters
     private let positionTolerance: Double = 5.0  // Pixels tolerance for considering windows at same position
@@ -305,15 +330,23 @@ class StackDetector: ObservableObject {
     func stopDetection() {
         updateTimer?.invalidate()
         updateTimer = nil
+        updateTask?.cancel()
+        updateTask = nil
     }
     
     // MARK: - Stack Detection Logic
     
     private func setupPeriodicUpdates() {
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
+        // Reduced frequency to minimize memory allocations
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
             Task { @MainActor [weak self] in
-                await self?.updateStacks()
+                // Cancel any existing task first
+                self?.updateTask?.cancel()
+
+                // Create and track a single task
+                self?.updateTask = Task { @MainActor [weak self] in
+                    await self?.updateStacks()
+                }
             }
         }
     }
@@ -358,12 +391,13 @@ class StackDetector: ObservableObject {
             
             // Clean up stale visibility state
             await cleanupStackVisibilityState(for: newStacks)
-            
-            // Update published state
-            detectedStacks = newStacks
+
+            // Only update if stacks have actually changed
+            if detectedStacks != newStacks {
+                detectedStacks = newStacks
+                logger.debug("Stacks changed - detected \(newStacks.count) stacks with \(newStacks.reduce(0) { $0 + $1.windows.count }) total stacked windows")
+            }
             lastUpdateTime = Date()
-            
-            logger.debug("Detected \(newStacks.count) stacks with \(newStacks.reduce(0) { $0 + $1.windows.count }) total stacked windows")
             
         } catch {
             logger.error("Error updating stacks: \(error.localizedDescription)")
@@ -623,6 +657,8 @@ class StackDetector: ObservableObject {
     deinit {
         updateTimer?.invalidate()
         updateTimer = nil
+        updateTask?.cancel()
+        updateTask = nil
         stackVisibilityState.removeAll()
         lastWindowFocusState.removeAll()
         logger.debug("StackDetector deinitialized")

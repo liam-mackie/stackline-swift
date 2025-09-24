@@ -9,6 +9,7 @@
     {
       "layers" : [
         {
+          "fill" : "automatic",
           "image-name" : "stack-rect.svg",
           "name" : "stack-rect",
           "position" : {
