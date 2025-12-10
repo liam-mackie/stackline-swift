@@ -10,10 +10,29 @@
 		94A190E42E31C83600B67315 /* Icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 94A190E32E31C83600B67315 /* Icon.icon */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		94EF12DA2E84A8710025B243 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 947CF86B2E319B4300A0F9A5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 947CF8722E319B4300A0F9A5;
+			remoteInfo = Stackline;
+		};
+		94EF12F32E84A8890025B243 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 947CF86B2E319B4300A0F9A5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 947CF8722E319B4300A0F9A5;
+			remoteInfo = Stackline;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		944517252E31A0A3006CBAC1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		947CF8732E319B4300A0F9A5 /* Stackline.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Stackline.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		94A190E32E31C83600B67315 /* Icon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = Icon.icon; sourceTree = "<group>"; };
+		94EF12D62E84A8710025B243 /* StacklineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StacklineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		94EF12ED2E84A8890025B243 /* StacklineUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StacklineUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -27,10 +46,34 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
+		94EF12D72E84A8710025B243 /* StacklineTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = StacklineTests;
+			sourceTree = "<group>";
+		};
+		94EF12EE2E84A8890025B243 /* StacklineUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = StacklineUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		947CF8702E319B4300A0F9A5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		94EF12D32E84A8710025B243 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		94EF12EA2E84A8890025B243 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -46,6 +89,8 @@
 				944517282E31A0B8006CBAC1 /* Resources */,
 				944517252E31A0A3006CBAC1 /* README.md */,
 				947CF8752E319B4300A0F9A5 /* Sources */,
+				94EF12D72E84A8710025B243 /* StacklineTests */,
+				94EF12EE2E84A8890025B243 /* StacklineUITests */,
 				947CF8742E319B4300A0F9A5 /* Products */,
 				94A190E32E31C83600B67315 /* Icon.icon */,
 			);
@@ -55,6 +100,8 @@
 			isa = PBXGroup;
 			children = (
 				947CF8732E319B4300A0F9A5 /* Stackline.app */,
+				94EF12D62E84A8710025B243 /* StacklineTests.xctest */,
+				94EF12ED2E84A8890025B243 /* StacklineUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -85,6 +132,52 @@
 			productReference = 947CF8732E319B4300A0F9A5 /* Stackline.app */;
 			productType = "com.apple.product-type.application";
 		};
+		94EF12D52E84A8710025B243 /* StacklineTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 94EF12DC2E84A8710025B243 /* Build configuration list for PBXNativeTarget "StacklineTests" */;
+			buildPhases = (
+				94EF12D22E84A8710025B243 /* Sources */,
+				94EF12D32E84A8710025B243 /* Frameworks */,
+				94EF12D42E84A8710025B243 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				94EF12DB2E84A8710025B243 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				94EF12D72E84A8710025B243 /* StacklineTests */,
+			);
+			name = StacklineTests;
+			packageProductDependencies = (
+			);
+			productName = StacklineTests;
+			productReference = 94EF12D62E84A8710025B243 /* StacklineTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		94EF12EC2E84A8890025B243 /* StacklineUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 94EF12F52E84A8890025B243 /* Build configuration list for PBXNativeTarget "StacklineUITests" */;
+			buildPhases = (
+				94EF12E92E84A8890025B243 /* Sources */,
+				94EF12EA2E84A8890025B243 /* Frameworks */,
+				94EF12EB2E84A8890025B243 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				94EF12F42E84A8890025B243 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				94EF12EE2E84A8890025B243 /* StacklineUITests */,
+			);
+			name = StacklineUITests;
+			packageProductDependencies = (
+			);
+			productName = StacklineUITests;
+			productReference = 94EF12ED2E84A8890025B243 /* StacklineUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -92,11 +185,19 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1640;
+				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					947CF8722E319B4300A0F9A5 = {
 						CreatedOnToolsVersion = 16.4;
+					};
+					94EF12D52E84A8710025B243 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = 947CF8722E319B4300A0F9A5;
+					};
+					94EF12EC2E84A8890025B243 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = 947CF8722E319B4300A0F9A5;
 					};
 				};
 			};
@@ -115,6 +216,8 @@
 			projectRoot = "";
 			targets = (
 				947CF8722E319B4300A0F9A5 /* Stackline */,
+				94EF12D52E84A8710025B243 /* StacklineTests */,
+				94EF12EC2E84A8890025B243 /* StacklineUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -128,6 +231,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		94EF12D42E84A8710025B243 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		94EF12EB2E84A8890025B243 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -138,7 +255,34 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		94EF12D22E84A8710025B243 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		94EF12E92E84A8890025B243 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		94EF12DB2E84A8710025B243 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 947CF8722E319B4300A0F9A5 /* Stackline */;
+			targetProxy = 94EF12DA2E84A8710025B243 /* PBXContainerItemProxy */;
+		};
+		94EF12F42E84A8890025B243 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 947CF8722E319B4300A0F9A5 /* Stackline */;
+			targetProxy = 94EF12F32E84A8890025B243 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		947CF87D2E319B4400A0F9A5 /* Debug */ = {
@@ -325,6 +469,84 @@
 			};
 			name = Release;
 		};
+		94EF12DD2E84A8710025B243 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UAHWPHRF97;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = sh.mackie.StacklineTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stackline.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Stackline";
+			};
+			name = Debug;
+		};
+		94EF12DE2E84A8710025B243 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UAHWPHRF97;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = sh.mackie.StacklineTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stackline.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Stackline";
+			};
+			name = Release;
+		};
+		94EF12F62E84A8890025B243 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UAHWPHRF97;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = sh.mackie.StacklineUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Stackline;
+			};
+			name = Debug;
+		};
+		94EF12F72E84A8890025B243 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UAHWPHRF97;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = sh.mackie.StacklineUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Stackline;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -342,6 +564,24 @@
 			buildConfigurations = (
 				947CF8802E319B4400A0F9A5 /* Debug */,
 				947CF8812E319B4400A0F9A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		94EF12DC2E84A8710025B243 /* Build configuration list for PBXNativeTarget "StacklineTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				94EF12DD2E84A8710025B243 /* Debug */,
+				94EF12DE2E84A8710025B243 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		94EF12F52E84A8890025B243 /* Build configuration list for PBXNativeTarget "StacklineUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				94EF12F62E84A8890025B243 /* Debug */,
+				94EF12F72E84A8890025B243 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

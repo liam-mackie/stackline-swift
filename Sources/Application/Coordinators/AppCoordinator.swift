@@ -345,6 +345,7 @@ final class AppCoordinator: ObservableObject {
         logger.info("Cleanup process completed")
     }
 
+
     deinit {
         // Clean up all notification observers
         for observer in notificationObservers {

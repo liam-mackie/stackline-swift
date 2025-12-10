@@ -8,6 +8,9 @@ let package = Package(
     platforms: [
         .macOS(.v13)
     ],
+    products: [
+        .executable(name: "stackline", targets: ["stackline"])
+    ],
     targets: [
         .executableTarget(
             name: "stackline",
