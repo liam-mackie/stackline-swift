@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import SwiftUI
+import ServiceManagement
 
 public final class UserDefaultsPreferences: PreferencesProtocol, ObservableObject, @unchecked Sendable {
     private let defaults: CachedUserDefaults
@@ -33,6 +34,20 @@ public final class UserDefaultsPreferences: PreferencesProtocol, ObservableObjec
         self.appearance = Self.loadAppearance(from: defaults)
         self.positioning = Self.loadPositioning(from: defaults)
         self.behavior = Self.loadBehavior(from: defaults)
+        syncLoginItemState()
+    }
+
+    private func syncLoginItemState() {
+        if #available(macOS 13.0, *) {
+            let isRegistered = SMAppService.mainApp.status == .enabled
+            if behavior.launchAtStartup != isRegistered {
+                behavior = BehaviorPreferences(
+                    showByDefault: behavior.showByDefault,
+                    clickToFocus: behavior.clickToFocus,
+                    launchAtStartup: isRegistered
+                )
+            }
+        }
     }
 
     public func addObserver(_ observer: PreferencesObserver) {
@@ -160,6 +175,22 @@ public final class UserDefaultsPreferences: PreferencesProtocol, ObservableObjec
         defaults.setBool(behavior.showByDefault, forKey: PreferencesKey.showByDefault.rawValue)
         defaults.setBool(behavior.clickToFocus, forKey: PreferencesKey.clickToFocus.rawValue)
         defaults.setBool(behavior.launchAtStartup, forKey: PreferencesKey.launchAtStartup.rawValue)
+        updateLoginItem(enabled: behavior.launchAtStartup)
+    }
+
+    private func updateLoginItem(enabled: Bool) {
+        if #available(macOS 13.0, *) {
+            let service = SMAppService.mainApp
+            do {
+                if enabled {
+                    try service.register()
+                } else {
+                    try service.unregister()
+                }
+            } catch {
+                // SMAppService can throw if already in the desired state
+            }
+        }
     }
 
     private func saveColor(_ color: CodableColor, forKey key: PreferencesKey) {
