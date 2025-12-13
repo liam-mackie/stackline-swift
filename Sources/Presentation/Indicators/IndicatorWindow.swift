@@ -21,7 +21,7 @@ final class IndicatorWindow: NSWindow {
     private func configureWindow(clickable: Bool) {
         backgroundColor = .clear
         isOpaque = false
-        hasShadow = true
+        hasShadow = false
         level = .floating
         collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
         ignoresMouseEvents = !clickable

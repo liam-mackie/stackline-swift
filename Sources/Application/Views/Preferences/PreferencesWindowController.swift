@@ -162,24 +162,24 @@ struct AppearancePreferencesView: View {
             }
 
             Section("Dimensions") {
-                if appearance.indicatorStyle == .icons || appearance.indicatorStyle == .minimal {
-                    Picker("Layout Direction", selection: $appearance.iconDirection) {
+                switch appearance.indicatorStyle {
+                case .pill:
+                    DimensionControl(label: "Pill Height", value: $appearance.pillSettings.pillHeight, range: 4...24, step: 1)
+                    DimensionControl(label: "Pill Width", value: $appearance.pillSettings.pillWidth, range: 20...120, step: 5)
+
+                case .icons:
+                    Picker("Layout Direction", selection: $appearance.iconsSettings.iconDirection) {
                         Text("Horizontal").tag(IconDirection.horizontal)
                         Text("Vertical").tag(IconDirection.vertical)
                     }
-                }
+                    DimensionControl(label: "Icon Size", value: $appearance.iconsSettings.iconSize, range: 12...48, step: 2)
 
-                if appearance.indicatorStyle == .icons {
-                    DimensionControl(label: "Icon Size", value: $appearance.iconSize, range: 12...48, step: 2)
-                }
-
-                if appearance.indicatorStyle == .pill {
-                    DimensionControl(label: "Pill Height", value: $appearance.pillHeight, range: 4...24, step: 1)
-                    DimensionControl(label: "Pill Width", value: $appearance.pillWidth, range: 20...120, step: 5)
-                }
-
-                if appearance.indicatorStyle == .minimal {
-                    DimensionControl(label: "Dot Size", value: $appearance.minimalSize, range: 4...20, step: 2)
+                case .minimal:
+                    Picker("Layout Direction", selection: $appearance.minimalSettings.iconDirection) {
+                        Text("Horizontal").tag(IconDirection.horizontal)
+                        Text("Vertical").tag(IconDirection.vertical)
+                    }
+                    DimensionControl(label: "Dot Size", value: $appearance.minimalSettings.minimalSize, range: 4...20, step: 2)
                 }
 
                 DimensionControl(label: "Spacing", value: $appearance.spacing, range: 0...16, step: 1)
@@ -195,9 +195,19 @@ struct AppearancePreferencesView: View {
                 ColorPicker("Border Color", selection: borderColorBinding)
             }
 
-            Section("Colors") {
-                ColorPicker("Focused Indicator", selection: focusedColorBinding)
-                ColorPicker("Unfocused Indicator", selection: unfocusedColorBinding)
+            Section("Indicator") {
+                switch appearance.indicatorStyle {
+                case .pill:
+                    ColorPicker("Text Color", selection: pillTextColorBinding)
+
+                case .icons:
+                    ColorPicker("Focused Dot Color", selection: iconsFocusedColorBinding)
+                    OpacityControl(label: "Unfocused Opacity", value: $appearance.iconsSettings.unfocusedOpacity)
+
+                case .minimal:
+                    ColorPicker("Focused Color", selection: minimalFocusedColorBinding)
+                    ColorPicker("Unfocused Color", selection: minimalUnfocusedColorBinding)
+                }
             }
         }
         .formStyle(.grouped)
@@ -208,29 +218,75 @@ struct AppearancePreferencesView: View {
     private var backgroundColorBinding: Binding<Color> {
         Binding(
             get: { appearance.backgroundColor.color },
-            set: { appearance.backgroundColor = CodableColor($0) }
+            set: { newValue in
+                DispatchQueue.main.async { appearance.backgroundColor = CodableColor(newValue) }
+            }
         )
     }
 
     private var borderColorBinding: Binding<Color> {
         Binding(
             get: { appearance.borderColor.color },
-            set: { appearance.borderColor = CodableColor($0) }
+            set: { newValue in
+                DispatchQueue.main.async { appearance.borderColor = CodableColor(newValue) }
+            }
         )
     }
 
-    private var focusedColorBinding: Binding<Color> {
+    private var pillTextColorBinding: Binding<Color> {
         Binding(
-            get: { appearance.focusedColor.color },
-            set: { appearance.focusedColor = CodableColor($0) }
+            get: { appearance.pillSettings.textColor.color },
+            set: { newValue in
+                DispatchQueue.main.async { appearance.pillSettings.textColor = CodableColor(newValue) }
+            }
         )
     }
 
-    private var unfocusedColorBinding: Binding<Color> {
+    private var iconsFocusedColorBinding: Binding<Color> {
         Binding(
-            get: { appearance.unfocusedColor.color },
-            set: { appearance.unfocusedColor = CodableColor($0) }
+            get: { appearance.iconsSettings.focusedColor.color },
+            set: { newValue in
+                DispatchQueue.main.async { appearance.iconsSettings.focusedColor = CodableColor(newValue) }
+            }
         )
+    }
+
+    private var minimalFocusedColorBinding: Binding<Color> {
+        Binding(
+            get: { appearance.minimalSettings.focusedColor.color },
+            set: { newValue in
+                DispatchQueue.main.async { appearance.minimalSettings.focusedColor = CodableColor(newValue) }
+            }
+        )
+    }
+
+    private var minimalUnfocusedColorBinding: Binding<Color> {
+        Binding(
+            get: { appearance.minimalSettings.unfocusedColor.color },
+            set: { newValue in
+                DispatchQueue.main.async { appearance.minimalSettings.unfocusedColor = CodableColor(newValue) }
+            }
+        )
+    }
+}
+
+// MARK: - Opacity Control
+
+struct OpacityControl: View {
+    let label: String
+    @Binding var value: CGFloat
+
+    var body: some View {
+        LabeledContent(label) {
+            HStack(spacing: 8) {
+                Slider(value: $value, in: 0...1, step: 0.05)
+                    .frame(minWidth: 120)
+
+                Text("\(Int(value * 100))%")
+                    .frame(width: 40, alignment: .trailing)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 

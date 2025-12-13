@@ -57,23 +57,9 @@ public struct LegacyConfigMigrator {
     }
 
     private func migrateAppearance(_ appearance: LegacyAppearance) {
+        // Shared settings
         if let style = appearance.indicatorStyle {
             defaults.setString(style, forKey: PreferencesKey.indicatorStyle.rawValue)
-        }
-        if let direction = appearance.iconDirection {
-            defaults.setString(direction, forKey: PreferencesKey.iconDirection.rawValue)
-        }
-        if let size = appearance.iconSize {
-            defaults.setDouble(size, forKey: PreferencesKey.iconSize.rawValue)
-        }
-        if let height = appearance.pillHeight {
-            defaults.setDouble(height, forKey: PreferencesKey.pillHeight.rawValue)
-        }
-        if let width = appearance.pillWidth {
-            defaults.setDouble(width, forKey: PreferencesKey.pillWidth.rawValue)
-        }
-        if let size = appearance.minimalSize {
-            defaults.setDouble(size, forKey: PreferencesKey.minimalSize.rawValue)
         }
         if let radius = appearance.cornerRadius {
             defaults.setDouble(radius, forKey: PreferencesKey.cornerRadius.rawValue)
@@ -93,11 +79,57 @@ public struct LegacyConfigMigrator {
         if let color = appearance.borderColor {
             saveColor(color, forKey: .borderColor)
         }
+
+        // Pill settings
+        var pillSettings = PillStyleSettings.default
+        if let height = appearance.pillHeight {
+            pillSettings.pillHeight = height
+        }
+        if let width = appearance.pillWidth {
+            pillSettings.pillWidth = width
+        }
         if let color = appearance.focusedColor {
-            saveColor(color, forKey: .focusedColor)
+            pillSettings.textColor = toCodableColor(color)
+        }
+        saveJSON(pillSettings, forKey: .pillSettings)
+
+        // Icons settings
+        var iconsSettings = IconsStyleSettings.default
+        if let direction = appearance.iconDirection, let dir = IconDirection(rawValue: direction) {
+            iconsSettings.iconDirection = dir
+        }
+        if let size = appearance.iconSize {
+            iconsSettings.iconSize = size
+        }
+        if let color = appearance.focusedColor {
+            iconsSettings.focusedColor = toCodableColor(color)
+        }
+        saveJSON(iconsSettings, forKey: .iconsSettings)
+
+        // Minimal settings
+        var minimalSettings = MinimalStyleSettings.default
+        if let direction = appearance.iconDirection, let dir = IconDirection(rawValue: direction) {
+            minimalSettings.iconDirection = dir
+        }
+        if let size = appearance.minimalSize {
+            minimalSettings.minimalSize = size
+        }
+        if let color = appearance.focusedColor {
+            minimalSettings.focusedColor = toCodableColor(color)
         }
         if let color = appearance.unfocusedColor {
-            saveColor(color, forKey: .unfocusedColor)
+            minimalSettings.unfocusedColor = toCodableColor(color)
+        }
+        saveJSON(minimalSettings, forKey: .minimalSettings)
+    }
+
+    private func toCodableColor(_ color: LegacyColor) -> CodableColor {
+        CodableColor(red: color.red, green: color.green, blue: color.blue, opacity: color.opacity)
+    }
+
+    private func saveJSON<T: Encodable>(_ value: T, forKey key: PreferencesKey) {
+        if let data = try? JSONEncoder().encode(value) {
+            defaults.setData(data, forKey: key.rawValue)
         }
     }
 

@@ -14,15 +14,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         initializeApp()
     }
 
-    func applicationWillTerminate(_ notification: Notification) {
-        // Use semaphore to wait for async shutdown to complete before process exits
-        let semaphore = DispatchSemaphore(value: 0)
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         Task {
             await container.shutdown()
-            semaphore.signal()
+            menuBarController?.teardown()
+            NSApp.reply(toApplicationShouldTerminate: true)
         }
-        semaphore.wait()
-        menuBarController?.teardown()
+        return .terminateLater
     }
 
     nonisolated func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

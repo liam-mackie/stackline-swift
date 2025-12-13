@@ -171,13 +171,74 @@ public struct LayoutStackSettings: Equatable, Codable, Sendable {
     }
 }
 
-public struct AppearancePreferences: Equatable, Codable, Sendable {
-    public var indicatorStyle: IndicatorStyle
-    public var iconDirection: IconDirection
-    public var iconSize: CGFloat
+// MARK: - Style-Specific Settings
+
+public struct PillStyleSettings: Equatable, Codable, Sendable {
     public var pillHeight: CGFloat
     public var pillWidth: CGFloat
+    public var textColor: CodableColor
+
+    public init(
+        pillHeight: CGFloat = 6,
+        pillWidth: CGFloat = 40,
+        textColor: CodableColor = CodableColor(.white)
+    ) {
+        self.pillHeight = pillHeight
+        self.pillWidth = pillWidth
+        self.textColor = textColor
+    }
+
+    public static let `default` = PillStyleSettings()
+}
+
+public struct IconsStyleSettings: Equatable, Codable, Sendable {
+    public var iconDirection: IconDirection
+    public var iconSize: CGFloat
+    public var unfocusedOpacity: CGFloat
+    public var focusedColor: CodableColor
+
+    public init(
+        iconDirection: IconDirection = .vertical,
+        iconSize: CGFloat = 24,
+        unfocusedOpacity: CGFloat = 0.6,
+        focusedColor: CodableColor = CodableColor(.white)
+    ) {
+        self.iconDirection = iconDirection
+        self.iconSize = iconSize
+        self.unfocusedOpacity = unfocusedOpacity
+        self.focusedColor = focusedColor
+    }
+
+    public static let `default` = IconsStyleSettings()
+}
+
+public struct MinimalStyleSettings: Equatable, Codable, Sendable {
+    public var iconDirection: IconDirection
     public var minimalSize: CGFloat
+    public var focusedColor: CodableColor
+    public var unfocusedColor: CodableColor
+
+    public init(
+        iconDirection: IconDirection = .vertical,
+        minimalSize: CGFloat = 8,
+        focusedColor: CodableColor = CodableColor(.white),
+        unfocusedColor: CodableColor = CodableColor(.gray)
+    ) {
+        self.iconDirection = iconDirection
+        self.minimalSize = minimalSize
+        self.focusedColor = focusedColor
+        self.unfocusedColor = unfocusedColor
+    }
+
+    public static let `default` = MinimalStyleSettings()
+}
+
+// MARK: - Appearance Preferences
+
+public struct AppearancePreferences: Equatable, Codable, Sendable {
+    public var indicatorStyle: IndicatorStyle
+
+    // Shared container settings
     public var cornerRadius: CGFloat
     public var spacing: CGFloat
     public var containerPadding: CGFloat
@@ -185,16 +246,14 @@ public struct AppearancePreferences: Equatable, Codable, Sendable {
     public var showContainer: Bool
     public var backgroundColor: CodableColor
     public var borderColor: CodableColor
-    public var focusedColor: CodableColor
-    public var unfocusedColor: CodableColor
+
+    // Style-specific settings
+    public var pillSettings: PillStyleSettings
+    public var iconsSettings: IconsStyleSettings
+    public var minimalSettings: MinimalStyleSettings
 
     public init(
         indicatorStyle: IndicatorStyle = .pill,
-        iconDirection: IconDirection = .vertical,
-        iconSize: CGFloat = 24,
-        pillHeight: CGFloat = 6,
-        pillWidth: CGFloat = 40,
-        minimalSize: CGFloat = 8,
         cornerRadius: CGFloat = 3,
         spacing: CGFloat = 4,
         containerPadding: CGFloat = 0,
@@ -202,15 +261,11 @@ public struct AppearancePreferences: Equatable, Codable, Sendable {
         showContainer: Bool = true,
         backgroundColor: CodableColor = CodableColor(.black.opacity(0.6)),
         borderColor: CodableColor = CodableColor(.clear),
-        focusedColor: CodableColor = CodableColor(.white),
-        unfocusedColor: CodableColor = CodableColor(.gray)
+        pillSettings: PillStyleSettings = .default,
+        iconsSettings: IconsStyleSettings = .default,
+        minimalSettings: MinimalStyleSettings = .default
     ) {
         self.indicatorStyle = indicatorStyle
-        self.iconDirection = iconDirection
-        self.iconSize = iconSize
-        self.pillHeight = pillHeight
-        self.pillWidth = pillWidth
-        self.minimalSize = minimalSize
         self.cornerRadius = cornerRadius
         self.spacing = spacing
         self.containerPadding = containerPadding
@@ -218,8 +273,9 @@ public struct AppearancePreferences: Equatable, Codable, Sendable {
         self.showContainer = showContainer
         self.backgroundColor = backgroundColor
         self.borderColor = borderColor
-        self.focusedColor = focusedColor
-        self.unfocusedColor = unfocusedColor
+        self.pillSettings = pillSettings
+        self.iconsSettings = iconsSettings
+        self.minimalSettings = minimalSettings
     }
 
     public static let `default` = AppearancePreferences()

@@ -85,15 +85,14 @@ public final class UserDefaultsPreferences: PreferencesProtocol, ObservableObjec
     private static func loadAppearance(from defaults: CachedUserDefaults) -> AppearancePreferences {
         let defaultAppearance = AppearancePreferences.default
 
+        // Load style-specific settings from JSON
+        let pillSettings: PillStyleSettings = loadJSON(from: defaults, key: .pillSettings) ?? .default
+        let iconsSettings: IconsStyleSettings = loadJSON(from: defaults, key: .iconsSettings) ?? .default
+        let minimalSettings: MinimalStyleSettings = loadJSON(from: defaults, key: .minimalSettings) ?? .default
+
         return AppearancePreferences(
             indicatorStyle: defaults.string(forKey: PreferencesKey.indicatorStyle.rawValue)
                 .flatMap { IndicatorStyle(rawValue: $0) } ?? defaultAppearance.indicatorStyle,
-            iconDirection: defaults.string(forKey: PreferencesKey.iconDirection.rawValue)
-                .flatMap { IconDirection(rawValue: $0) } ?? defaultAppearance.iconDirection,
-            iconSize: CGFloat(defaults.double(forKey: PreferencesKey.iconSize.rawValue, default: defaultAppearance.iconSize)),
-            pillHeight: CGFloat(defaults.double(forKey: PreferencesKey.pillHeight.rawValue, default: defaultAppearance.pillHeight)),
-            pillWidth: CGFloat(defaults.double(forKey: PreferencesKey.pillWidth.rawValue, default: defaultAppearance.pillWidth)),
-            minimalSize: CGFloat(defaults.double(forKey: PreferencesKey.minimalSize.rawValue, default: defaultAppearance.minimalSize)),
             cornerRadius: CGFloat(defaults.double(forKey: PreferencesKey.cornerRadius.rawValue, default: defaultAppearance.cornerRadius)),
             spacing: CGFloat(defaults.double(forKey: PreferencesKey.spacing.rawValue, default: defaultAppearance.spacing)),
             containerPadding: CGFloat(defaults.double(forKey: PreferencesKey.containerPadding.rawValue, default: defaultAppearance.containerPadding)),
@@ -101,9 +100,18 @@ public final class UserDefaultsPreferences: PreferencesProtocol, ObservableObjec
             showContainer: defaults.bool(forKey: PreferencesKey.showContainer.rawValue, default: defaultAppearance.showContainer),
             backgroundColor: loadColor(from: defaults, key: .backgroundColor, default: defaultAppearance.backgroundColor),
             borderColor: loadColor(from: defaults, key: .borderColor, default: defaultAppearance.borderColor),
-            focusedColor: loadColor(from: defaults, key: .focusedColor, default: defaultAppearance.focusedColor),
-            unfocusedColor: loadColor(from: defaults, key: .unfocusedColor, default: defaultAppearance.unfocusedColor)
+            pillSettings: pillSettings,
+            iconsSettings: iconsSettings,
+            minimalSettings: minimalSettings
         )
+    }
+
+    private static func loadJSON<T: Decodable>(from defaults: CachedUserDefaults, key: PreferencesKey) -> T? {
+        guard let data = defaults.data(forKey: key.rawValue),
+              let decoded = try? JSONDecoder().decode(T.self, from: data) else {
+            return nil
+        }
+        return decoded
     }
 
     private static func loadPositioning(from defaults: CachedUserDefaults) -> PositioningPreferences {
@@ -143,12 +151,8 @@ public final class UserDefaultsPreferences: PreferencesProtocol, ObservableObjec
     }
 
     private func saveAppearance() {
+        // Shared settings
         defaults.setString(appearance.indicatorStyle.rawValue, forKey: PreferencesKey.indicatorStyle.rawValue)
-        defaults.setString(appearance.iconDirection.rawValue, forKey: PreferencesKey.iconDirection.rawValue)
-        defaults.setDouble(appearance.iconSize, forKey: PreferencesKey.iconSize.rawValue)
-        defaults.setDouble(appearance.pillHeight, forKey: PreferencesKey.pillHeight.rawValue)
-        defaults.setDouble(appearance.pillWidth, forKey: PreferencesKey.pillWidth.rawValue)
-        defaults.setDouble(appearance.minimalSize, forKey: PreferencesKey.minimalSize.rawValue)
         defaults.setDouble(appearance.cornerRadius, forKey: PreferencesKey.cornerRadius.rawValue)
         defaults.setDouble(appearance.spacing, forKey: PreferencesKey.spacing.rawValue)
         defaults.setDouble(appearance.containerPadding, forKey: PreferencesKey.containerPadding.rawValue)
@@ -156,8 +160,17 @@ public final class UserDefaultsPreferences: PreferencesProtocol, ObservableObjec
         defaults.setBool(appearance.showContainer, forKey: PreferencesKey.showContainer.rawValue)
         saveColor(appearance.backgroundColor, forKey: .backgroundColor)
         saveColor(appearance.borderColor, forKey: .borderColor)
-        saveColor(appearance.focusedColor, forKey: .focusedColor)
-        saveColor(appearance.unfocusedColor, forKey: .unfocusedColor)
+
+        // Style-specific settings as JSON
+        saveJSON(appearance.pillSettings, forKey: .pillSettings)
+        saveJSON(appearance.iconsSettings, forKey: .iconsSettings)
+        saveJSON(appearance.minimalSettings, forKey: .minimalSettings)
+    }
+
+    private func saveJSON<T: Encodable>(_ value: T, forKey key: PreferencesKey) {
+        if let data = try? JSONEncoder().encode(value) {
+            defaults.setData(data, forKey: key.rawValue)
+        }
     }
 
     private func savePositioning() {

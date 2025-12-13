@@ -139,7 +139,7 @@ final class IndicatorSizeCalculatorTests: XCTestCase {
 
     func testPillSizeMinimum() {
         let size = IndicatorSizeCalculator.pillSize(windowCount: 1, appearance: defaultAppearance)
-        XCTAssertGreaterThanOrEqual(size.width, defaultAppearance.pillWidth)
+        XCTAssertGreaterThanOrEqual(size.width, defaultAppearance.pillSettings.pillWidth)
         XCTAssertGreaterThan(size.height, 0)
     }
 

@@ -85,12 +85,7 @@ final class MenuBarController: NSObject {
     }
 
     @objc private func quitApp() {
-        Task {
-            await container.shutdown()
-            await MainActor.run {
-                NSApp.terminate(nil)
-            }
-        }
+        NSApp.terminate(nil)
     }
 }
 

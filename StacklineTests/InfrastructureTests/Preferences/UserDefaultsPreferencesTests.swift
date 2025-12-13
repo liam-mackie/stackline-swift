@@ -23,10 +23,10 @@ final class UserDefaultsPreferencesTests: XCTestCase {
 
     func testDefaultAppearanceValues() {
         XCTAssertEqual(preferences.appearance.indicatorStyle, .pill)
-        XCTAssertEqual(preferences.appearance.iconDirection, .vertical)
-        XCTAssertEqual(preferences.appearance.iconSize, 24)
-        XCTAssertEqual(preferences.appearance.pillHeight, 6)
-        XCTAssertEqual(preferences.appearance.pillWidth, 40)
+        XCTAssertEqual(preferences.appearance.iconsSettings.iconDirection, .vertical)
+        XCTAssertEqual(preferences.appearance.iconsSettings.iconSize, 24)
+        XCTAssertEqual(preferences.appearance.pillSettings.pillHeight, 6)
+        XCTAssertEqual(preferences.appearance.pillSettings.pillWidth, 40)
         XCTAssertTrue(preferences.appearance.showContainer)
     }
 
@@ -44,12 +44,12 @@ final class UserDefaultsPreferencesTests: XCTestCase {
 
     func testAppearanceChangesPersist() {
         preferences.appearance.indicatorStyle = .icons
-        preferences.appearance.iconSize = 32
+        preferences.appearance.iconsSettings.iconSize = 32
 
         let newPreferences = UserDefaultsPreferences(defaults: defaults)
 
         XCTAssertEqual(newPreferences.appearance.indicatorStyle, .icons)
-        XCTAssertEqual(newPreferences.appearance.iconSize, 32)
+        XCTAssertEqual(newPreferences.appearance.iconsSettings.iconSize, 32)
     }
 
     func testPositioningChangesPersist() {
@@ -90,6 +90,12 @@ final class UserDefaultsPreferencesTests: XCTestCase {
 
         preferences.appearance.indicatorStyle = .icons
 
+        let expectation = expectation(description: "Observer notified")
+        DispatchQueue.main.async {
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1.0)
+
         XCTAssertEqual(observer.changedKeyPaths.count, 1)
     }
 
@@ -99,6 +105,12 @@ final class UserDefaultsPreferencesTests: XCTestCase {
         preferences.removeObserver(observer)
 
         preferences.appearance.indicatorStyle = .icons
+
+        let expectation = expectation(description: "Queue processed")
+        DispatchQueue.main.async {
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1.0)
 
         XCTAssertEqual(observer.changedKeyPaths.count, 0)
     }

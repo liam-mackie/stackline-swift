@@ -147,35 +147,38 @@ struct IndicatorSizeCalculator {
     }
 
     static func pillSize(windowCount: Int, appearance: AppearancePreferences) -> CGSize {
+        let pillSettings = appearance.pillSettings
         let padding = appearance.containerPadding
         let textWidth = CGFloat(windowCount) * 10.0 + padding * 2
         return CGSize(
-            width: max(appearance.pillWidth, textWidth) + padding * 2,
-            height: appearance.pillHeight + padding * 2
+            width: max(pillSettings.pillWidth, textWidth) + padding * 2,
+            height: pillSettings.pillHeight + padding * 2
         )
     }
 
     static func iconsSize(windowCount: Int, appearance: AppearancePreferences) -> CGSize {
-        let iconDimension = CGFloat(windowCount) * appearance.iconSize + CGFloat(max(0, windowCount - 1)) * appearance.spacing
+        let iconsSettings = appearance.iconsSettings
+        let iconDimension = CGFloat(windowCount) * iconsSettings.iconSize + CGFloat(max(0, windowCount - 1)) * appearance.spacing
         let padding = appearance.containerPadding * 2
 
-        switch appearance.iconDirection {
+        switch iconsSettings.iconDirection {
         case .horizontal:
-            return CGSize(width: iconDimension + padding, height: appearance.iconSize + padding)
+            return CGSize(width: iconDimension + padding, height: iconsSettings.iconSize + padding)
         case .vertical:
-            return CGSize(width: appearance.iconSize + padding, height: iconDimension + padding)
+            return CGSize(width: iconsSettings.iconSize + padding, height: iconDimension + padding)
         }
     }
 
     static func minimalSize(windowCount: Int, appearance: AppearancePreferences) -> CGSize {
-        let dotDimension = CGFloat(windowCount) * appearance.minimalSize + CGFloat(max(0, windowCount - 1)) * appearance.spacing
+        let minimalSettings = appearance.minimalSettings
+        let dotDimension = CGFloat(windowCount) * minimalSettings.minimalSize + CGFloat(max(0, windowCount - 1)) * appearance.spacing
         let padding = appearance.containerPadding * 2
 
-        switch appearance.iconDirection {
+        switch minimalSettings.iconDirection {
         case .horizontal:
-            return CGSize(width: dotDimension + padding, height: appearance.minimalSize + padding)
+            return CGSize(width: dotDimension + padding, height: minimalSettings.minimalSize + padding)
         case .vertical:
-            return CGSize(width: appearance.minimalSize + padding, height: dotDimension + padding)
+            return CGSize(width: minimalSettings.minimalSize + padding, height: dotDimension + padding)
         }
     }
 }

@@ -25,8 +25,10 @@ struct PillIndicatorView: View {
     let appearance: AppearancePreferences
     var onWindowClick: ((WindowIdentifier) -> Void)?
 
+    private var pillSettings: PillStyleSettings { appearance.pillSettings }
+
     private var fontSize: CGFloat {
-        max(8, appearance.pillHeight * 0.8)
+        max(8, pillSettings.pillHeight * 0.8)
     }
 
     var body: some View {
@@ -39,8 +41,8 @@ struct PillIndicatorView: View {
                     .font(.system(size: fontSize, weight: .medium, design: .rounded))
             }
         }
-        .foregroundColor(appearance.focusedColor.color)
-        .frame(minWidth: appearance.pillWidth, minHeight: appearance.pillHeight)
+        .foregroundColor(pillSettings.textColor.color)
+        .frame(minWidth: pillSettings.pillWidth, minHeight: pillSettings.pillHeight)
         .modifier(ContainerBackgroundModifier(
             color: appearance.backgroundColor.color,
             cornerRadius: appearance.cornerRadius,
@@ -77,13 +79,15 @@ struct IconsIndicatorView: View {
     let appearance: AppearancePreferences
     var onWindowClick: ((WindowIdentifier) -> Void)?
 
+    private var iconsSettings: IconsStyleSettings { appearance.iconsSettings }
+
     var body: some View {
-        DirectionalStack(direction: appearance.iconDirection, spacing: appearance.spacing) {
+        DirectionalStack(direction: iconsSettings.iconDirection, spacing: appearance.spacing) {
             ForEach(Array(stack.windows.enumerated()), id: \.element.id) { _, window in
                 WindowIcon(
                     window: window,
                     isFocused: window.id == stack.focusedWindowId,
-                    appearance: appearance,
+                    settings: iconsSettings,
                     onTap: { onWindowClick?(window.id) }
                 )
             }
@@ -103,7 +107,7 @@ struct IconsIndicatorView: View {
 struct WindowIcon: View {
     let window: ManagedWindow
     let isFocused: Bool
-    let appearance: AppearancePreferences
+    let settings: IconsStyleSettings
     var onTap: (() -> Void)?
 
     @State private var appIcon: NSImage?
@@ -114,21 +118,21 @@ struct WindowIcon: View {
                 Image(nsImage: icon)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: appearance.iconSize, height: appearance.iconSize)
+                    .frame(width: settings.iconSize, height: settings.iconSize)
             } else {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(Color.gray.opacity(0.3))
-                    .frame(width: appearance.iconSize, height: appearance.iconSize)
+                    .frame(width: settings.iconSize, height: settings.iconSize)
             }
 
             if isFocused {
                 Circle()
-                    .fill(appearance.focusedColor.color)
+                    .fill(settings.focusedColor.color)
                     .frame(width: 6, height: 6)
-                    .offset(x: appearance.iconSize / 2 - 3, y: appearance.iconSize / 2 - 3)
+                    .offset(x: settings.iconSize / 2 - 3, y: settings.iconSize / 2 - 3)
             }
         }
-        .opacity(isFocused ? 1.0 : 0.6)
+        .opacity(isFocused ? 1.0 : settings.unfocusedOpacity)
         .contentShape(Rectangle())
         .onTapGesture {
             onTap?()
@@ -145,12 +149,14 @@ struct MinimalIndicatorView: View {
     let appearance: AppearancePreferences
     var onWindowClick: ((WindowIdentifier) -> Void)?
 
+    private var minimalSettings: MinimalStyleSettings { appearance.minimalSettings }
+
     var body: some View {
-        DirectionalStack(direction: appearance.iconDirection, spacing: appearance.spacing) {
+        DirectionalStack(direction: minimalSettings.iconDirection, spacing: appearance.spacing) {
             ForEach(0..<stack.count, id: \.self) { index in
                 Circle()
                     .fill(dotColor(for: index))
-                    .frame(width: appearance.minimalSize, height: appearance.minimalSize)
+                    .frame(width: minimalSettings.minimalSize, height: minimalSettings.minimalSize)
                     .contentShape(Circle())
                     .onTapGesture {
                         onWindowClick?(stack.windows[index].id)
@@ -169,7 +175,7 @@ struct MinimalIndicatorView: View {
 
     private func dotColor(for index: Int) -> Color {
         let isFocused = stack.windows[index].id == stack.focusedWindowId
-        return isFocused ? appearance.focusedColor.color : appearance.unfocusedColor.color
+        return isFocused ? minimalSettings.focusedColor.color : minimalSettings.unfocusedColor.color
     }
 }
 

@@ -58,6 +58,7 @@ final class IndicatorCoordinator: PreferencesObserver {
 
     func stop() {
         preferences.removeObserver(self)
+        cancellables.removeAll()
         removeAllIndicators()
     }
 
