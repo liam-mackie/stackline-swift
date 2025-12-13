@@ -6,7 +6,7 @@ A Swift application that interfaces with [Yabai](https://github.com/koekeishiya/
 
 ### Prerequisites
 
-- macOS 13.0 or later
+- macOS 15.0 or later
 - [Yabai](https://github.com/koekeishiya/yabai) installed and running
 
 ### Installing the pre-built binary
@@ -23,7 +23,7 @@ The application is signed, notarized and stapled, so you should be able to just 
 *Note: I recently swapped from using plain old swift to xcode to build a signed app bundle*
 
 #### Prerequisites
-* XCode 26+ (for the app icon)
+* Xcode 26+ (for the app icon)
   * It will compile with a lower version, but your mileage may vary
 
 #### Steps
@@ -55,22 +55,14 @@ The application is signed, notarized and stapled, so you should be able to just 
 
 Stackline automatically sets up Yabai signals for you! When you start Stackline, it will:
 
-1. **Remove any old Stackline signals** (identified by `mackie-sh-stackline`)
+1. **Remove any old Stackline signals** (identified by `stackline-*`)
 2. **Add new signals** with the correct path to your current Stackline binary
-3. **Periodically check** that signals are properly configured
 
-**Manual Signal Setup**:
-You can also manually trigger signal setup from the Stackline interface by clicking the "Setup Yabai Signals" button in the Status tab.
-
-**Signal Cleanup**:
-Stackline automatically removes its signals when terminating normally with a 20-second timeout. For manual cleanup (e.g., after an unclean shutdown), you can run:
-```bash
-/Applications/Stackline.app/Contents/MacOS/Stackline --cleanup
-```
+Stackline automatically removes its signals when terminating normally.
 
 ### Auto-start
 
-To start Stackline automatically, ensure `stackline` is installed to your applications folder, then run it. In the behaviour section of configuration, tick "Launch at startup"
+To start Stackline automatically, run stackline, then open preferences from the menu bar icon. In the general, enable "Launch at Login"
 
 ## Usage
 
@@ -86,19 +78,13 @@ Stackline supports several command-line options:
 /Applications/Stackline.app/Contents/MacOS/Stackline
 
 # Handle a signal from Yabai (used internally by automatic signal setup)
-/Applications/Stackline.app/Contents/MacOS/Stackline handle-signal window_created
+/Applications/Stackline.app/Contents/MacOS/Stackline handle-signal window_focused $YABAI_WINDOW_ID
 
 # Show version information
 /Applications/Stackline.app/Contents/MacOS/Stackline --version
 
 # Show help
 /Applications/Stackline.app/Contents/MacOS/Stackline --help
-
-# Test signal system
-/Applications/Stackline.app/Contents/MacOS/Stackline --test-client
-
-# Clean up yabai signals
-/Applications/Stackline.app/Contents/MacOS/Stackline --cleanup
 ```
 
 ## Development
@@ -110,14 +96,14 @@ Contributions are welcome! Please:
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable (I haven't)
+4. Add tests if applicable (I probably haven't)
 5. Submit a pull request
 
 ## Requirements
 
-- **macOS**: 13.0+ (Ventura or later) - tested on `15.5 (24F74)`.
-- **Yabai**: Any recent version - tested with `yabai-v7.1.15`
-- **Architecture**: Intel x86_64 or Apple Silicon (universal binary support)
+- **macOS**: 15.0+ (tested on macOS 26).
+- **Yabai**: Any recent version
+- **Architecture**: Intel x86_64 or Apple Silicon (Tested on Apple Silicon)
 
 ## Acknowledgments
 

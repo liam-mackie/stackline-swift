@@ -1,17 +1,27 @@
-// swift-tools-version:5.8
-// The swift-tools-version declares the minimum version of Swift required to build this package.
-
+// swift-tools-version:6.0
 import PackageDescription
 
 let package = Package(
-    name: "stackline",
+    name: "Stackline",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v15)
+    ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0"),
     ],
     targets: [
         .executableTarget(
-            name: "stackline",
-            path: "Sources"
-        )
+            name: "Stackline",
+            dependencies: [
+                .product(name: "Logging", package: "swift-log"),
+            ],
+            path: "Sources",
+            exclude: ["Stackline.entitlements"]
+        ),
+        .testTarget(
+            name: "StacklineTests",
+            dependencies: ["Stackline"],
+            path: "StacklineTests"
+        ),
     ]
-) 
+)
