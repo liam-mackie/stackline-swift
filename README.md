@@ -1,6 +1,6 @@
 # Stackline
 
-A Swift application that interfaces with [Yabai](https://github.com/koekeishiya/yabai) to display interactive stack indicators for stacked windows on macOS.
+A [Swift](https://www.suzuki.com.au/vehicles/hatch/swift-hybrid/) application that interfaces with [Yabai](https://github.com/koekeishiya/yabai) to display interactive stack indicators for stacked windows on macOS.
 
 ## Installation
 
