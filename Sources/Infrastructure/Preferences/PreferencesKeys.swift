@@ -1,6 +1,5 @@
-import Foundation
-
-public enum PreferencesKey: String, CaseIterable {
+/// `UserDefaults` keys. These are the on-disk format of users' settings: never rename them.
+enum PreferencesKey: String, CaseIterable {
     // Appearance - shared
     case indicatorStyle = "appearance.indicatorStyle"
     case cornerRadius = "appearance.cornerRadius"
@@ -23,9 +22,8 @@ public enum PreferencesKey: String, CaseIterable {
     case globalVerticalOffset = "positioning.globalVerticalOffset"
     case layoutSettings = "positioning.layoutSettings"
 
+    // Behavior
     case showByDefault = "behavior.showByDefault"
     case clickToFocus = "behavior.clickToFocus"
     case launchAtStartup = "behavior.launchAtStartup"
-
-    case hasMigratedFromJSON = "migration.hasMigratedFromJSON"
 }

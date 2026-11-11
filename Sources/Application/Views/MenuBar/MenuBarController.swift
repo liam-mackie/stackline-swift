@@ -1,94 +1,75 @@
 import AppKit
-import SwiftUI
 
-/// Manages the menu bar status item and dropdown menu
+/// The menu bar status item and its menu.
 @MainActor
-final class MenuBarController: NSObject {
-    private var statusItem: NSStatusItem?
-    private let container: DependencyContainer
+final class MenuBarController: NSObject, NSMenuDelegate {
+    private let preferences: Preferences
+    private let store: StackStore
+    private let showPreferences: () -> Void
 
-    init(container: DependencyContainer) {
-        self.container = container
+    private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    private let connectionItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+    private let indicatorsItem = NSMenuItem(title: "Show Indicators", action: #selector(toggleIndicators), keyEquivalent: "")
+    private var observation: ObservationLoop?
+
+    init(preferences: Preferences, store: StackStore, showPreferences: @escaping () -> Void) {
+        self.preferences = preferences
+        self.store = store
+        self.showPreferences = showPreferences
         super.init()
-    }
 
-    func setup() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        let image = NSImage(systemSymbolName: "square.stack.3d.up", accessibilityDescription: "Stackline")
+        image?.isTemplate = true
+        statusItem.button?.image = image
+        statusItem.menu = makeMenu()
 
-        if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "square.stack.3d.up", accessibilityDescription: "Stackline")
-            button.image?.isTemplate = true
+        // The icon is dimmed while there is no window manager to show stacks for.
+        observation = ObservationLoop { [weak self] in
+            guard let self else { return }
+            statusItem.button?.appearsDisabled = store.connection != .connected
         }
-
-        statusItem?.menu = createMenu()
     }
 
-    func teardown() {
-        if let item = statusItem {
-            NSStatusBar.system.removeStatusItem(item)
+    func remove() {
+        observation?.cancel()
+        observation = nil
+        NSStatusBar.system.removeStatusItem(statusItem)
+    }
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        connectionItem.title = switch store.connection {
+        case .connected: "Connected to yabai"
+        case .waiting: "Waiting for yabai…"
         }
-        statusItem = nil
+        indicatorsItem.state = preferences.behavior.showByDefault ? .on : .off
     }
 
-    private func createMenu() -> NSMenu {
+    private func makeMenu() -> NSMenu {
         let menu = NSMenu()
+        menu.delegate = self
 
-        let statusItem = NSMenuItem(title: "Stackline", action: nil, keyEquivalent: "")
-        statusItem.isEnabled = false
-        menu.addItem(statusItem)
+        connectionItem.isEnabled = false
+        menu.addItem(connectionItem)
+        menu.addItem(.separator())
 
-        menu.addItem(NSMenuItem.separator())
+        indicatorsItem.target = self
+        menu.addItem(indicatorsItem)
+        menu.addItem(.separator())
 
-        let toggleItem = NSMenuItem(
-            title: "Show Indicators",
-            action: #selector(toggleIndicators),
-            keyEquivalent: ""
-        )
-        toggleItem.target = self
-        toggleItem.state = container.preferences.behavior.showByDefault ? .on : .off
-        menu.addItem(toggleItem)
-
-        menu.addItem(NSMenuItem.separator())
-
-        let preferencesItem = NSMenuItem(
-            title: "Preferences...",
-            action: #selector(openPreferences),
-            keyEquivalent: ","
-        )
+        let preferencesItem = NSMenuItem(title: "Preferences…", action: #selector(openPreferences), keyEquivalent: ",")
         preferencesItem.target = self
         menu.addItem(preferencesItem)
+        menu.addItem(.separator())
 
-        menu.addItem(NSMenuItem.separator())
-
-        let quitItem = NSMenuItem(
-            title: "Quit Stackline",
-            action: #selector(quitApp),
-            keyEquivalent: "q"
-        )
-        quitItem.target = self
-        menu.addItem(quitItem)
-
+        menu.addItem(withTitle: "Quit Stackline", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         return menu
     }
 
-    @objc private func toggleIndicators(_ sender: NSMenuItem) {
-        var behavior = container.preferences.behavior
-        behavior.showByDefault.toggle()
-        container.preferences.behavior = behavior
-
-        sender.state = behavior.showByDefault ? .on : .off
+    @objc private func toggleIndicators() {
+        preferences.behavior.showByDefault.toggle()
     }
 
     @objc private func openPreferences() {
-        NSApp.activate(ignoringOtherApps: true)
-        NotificationCenter.default.post(name: .openPreferences, object: nil)
+        showPreferences()
     }
-
-    @objc private func quitApp() {
-        NSApp.terminate(nil)
-    }
-}
-
-extension Notification.Name {
-    static let openPreferences = Notification.Name("sh.mackie.stackline.openPreferences")
 }

@@ -1,24 +1,20 @@
 import AppKit
 import SwiftUI
 
-/// NSWindow wrapper for displaying stack indicators
+/// A borderless, transparent window showing the indicator for one stack on every space.
 final class IndicatorWindow: NSWindow {
-    private let stackId: String
+    private let hostingView: NSHostingView<IndicatorView>
 
-    init(stackId: String, contentRect: NSRect, clickable: Bool = false) {
-        self.stackId = stackId
+    init(view: IndicatorView, frame: NSRect, clickable: Bool) {
+        hostingView = NSHostingView(rootView: view)
 
         super.init(
-            contentRect: contentRect,
+            contentRect: frame,
             styleMask: [.borderless, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
 
-        configureWindow(clickable: clickable)
-    }
-
-    private func configureWindow(clickable: Bool) {
         backgroundColor = .clear
         isOpaque = false
         hasShadow = false
@@ -26,24 +22,18 @@ final class IndicatorWindow: NSWindow {
         collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
         ignoresMouseEvents = !clickable
         isReleasedWhenClosed = false
-    }
-
-    func setClickable(_ clickable: Bool) {
-        ignoresMouseEvents = !clickable
-    }
-
-    func updatePosition(_ point: CGPoint) {
-        setFrameOrigin(point)
-    }
-
-    func updateSize(_ size: CGSize) {
-        setContentSize(size)
-    }
-
-    func setIndicatorView<Content: View>(_ view: Content) {
-        let hostingView = NSHostingView(rootView: view)
-        hostingView.frame = contentView?.bounds ?? .zero
-        hostingView.autoresizingMask = [.width, .height]
         contentView = hostingView
+    }
+
+    /// Updates the indicator in place, so SwiftUI diffs the content instead of rebuilding it.
+    func update(view: IndicatorView, frame: NSRect, clickable: Bool) {
+        hostingView.rootView = view
+        ignoresMouseEvents = !clickable
+
+        // Compared against the actual frame rather than the last one requested: AppKit moves
+        // windows on its own when displays are reconfigured.
+        if self.frame != frame {
+            setFrame(frame, display: true)
+        }
     }
 }

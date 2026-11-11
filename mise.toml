@@ -1,0 +1,34 @@
+[tasks.test]
+description = "Run the test suite"
+run = "swift test"
+
+[tasks.build]
+description = "Build a signed Release Stackline.app into ./build"
+run = "xcodebuild -scheme Stackline -configuration Release -derivedDataPath build -quiet build"
+
+[tasks.install]
+description = "Build Stackline, install it into /Applications and (re)start it"
+depends = ["build"]
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+built="build/Build/Products/Release/Stackline.app"
+installed="/Applications/Stackline.app"
+
+# Stop the running copy first. SIGTERM lets it unregister from yabai; anything an older build
+# leaves behind is swept by the new one when it starts.
+if pkill -TERM -x Stackline; then
+    for _ in $(seq 50); do
+        pgrep -x Stackline >/dev/null || break
+        sleep 0.1
+    done
+    pkill -KILL -x Stackline || true
+fi
+
+rm -rf "$installed"
+ditto "$built" "$installed"
+
+open "$installed"
+echo "Installed $(defaults read "$installed/Contents/Info" CFBundleShortVersionString) to $installed"
+'''

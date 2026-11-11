@@ -110,11 +110,9 @@ struct WindowIcon: View {
     let settings: IconsStyleSettings
     var onTap: (() -> Void)?
 
-    @State private var appIcon: NSImage?
-
     var body: some View {
         ZStack {
-            if let icon = appIcon {
+            if let icon = AppIconCache.shared.icon(for: window.processId) {
                 Image(nsImage: icon)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -136,9 +134,6 @@ struct WindowIcon: View {
         .contentShape(Rectangle())
         .onTapGesture {
             onTap?()
-        }
-        .task(id: window.processId) {
-            appIcon = await AppIconCache.shared.icon(for: window.processId)
         }
     }
 }

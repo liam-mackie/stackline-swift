@@ -53,12 +53,13 @@ The application is signed, notarized and stapled, so you should be able to just 
 
 ### Yabai Setup
 
-Stackline automatically sets up Yabai signals for you! When you start Stackline, it will:
+There is nothing to configure: Stackline registers the Yabai signals it needs by itself and keeps them registered.
 
-1. **Remove any old Stackline signals** (identified by `stackline-*`)
-2. **Add new signals** with the correct path to your current Stackline binary
+- **Start order doesn't matter.** If Yabai isn't running yet, Stackline waits for it (the menu bar icon is dimmed and the menu says "Waiting for yabai…") and connects as soon as it appears.
+- **Yabai can restart.** Yabai forgets its signals when it restarts; Stackline notices the restart and registers them again.
+- **Signals are cleaned up.** They are removed when Stackline quits — from the menu, on logout, or via `SIGTERM`/`SIGINT`. If Stackline is killed outright, each signal removes itself the next time it fires, and anything still left is swept the next time Stackline starts.
 
-Stackline automatically removes its signals when terminating normally.
+The signals are labelled `stackline-<pid>-<event>` (see `yabai -m signal --list`). Their action writes the event to a Unix socket at `~/Library/Application Support/Stackline/events.sock` with `nc`.
 
 ### Auto-start
 
@@ -77,9 +78,6 @@ Stackline supports several command-line options:
 # Start the application
 /Applications/Stackline.app/Contents/MacOS/Stackline
 
-# Handle a signal from Yabai (used internally by automatic signal setup)
-/Applications/Stackline.app/Contents/MacOS/Stackline handle-signal window_focused $YABAI_WINDOW_ID
-
 # Show version information
 /Applications/Stackline.app/Contents/MacOS/Stackline --version
 
@@ -87,7 +85,25 @@ Stackline supports several command-line options:
 /Applications/Stackline.app/Contents/MacOS/Stackline --help
 ```
 
+Only one instance runs per user; a second one exits immediately.
+
+## Troubleshooting
+
+Stackline logs to the unified log:
+
+```bash
+log stream --level debug --predicate 'subsystem == "sh.mackie.stackline"'
+```
+
 ## Development
+
+### Testing
+
+```bash
+swift test
+```
+
+The suite talks to an in-process fake of Yabai, so it never touches a running one.
 
 ### Contributing
 

@@ -1,36 +1,28 @@
 import AppKit
 
+/// Application icons by process ID.
 @MainActor
 final class AppIconCache {
     static let shared = AppIconCache()
 
-    private var cache: [Int: NSImage] = [:]
+    private var icons: [Int: NSImage] = [:]
 
     private init() {}
 
-    func icon(for processId: Int) async -> NSImage? {
-        if let cached = cache[processId] {
-            return cached
+    func icon(for processId: Int) -> NSImage? {
+        if let icon = icons[processId] {
+            return icon
         }
-        let icon = loadIcon(for: processId)
-        if let icon = icon {
-            cache[processId] = icon
+        guard let icon = NSRunningApplication(processIdentifier: pid_t(processId))?.icon else {
+            return nil
         }
+        icons[processId] = icon
         return icon
     }
 
-    private func loadIcon(for processId: Int) -> NSImage? {
-        guard let app = NSRunningApplication(processIdentifier: pid_t(processId)) else {
-            return nil
-        }
-        return app.icon
-    }
-
-    func invalidate(processId: Int) {
-        cache.removeValue(forKey: processId)
-    }
-
-    func invalidateAll() {
-        cache.removeAll()
+    /// Forgets every icon except those of `processIds`. Process IDs are reused, so an icon must
+    /// not outlive the process it was loaded for.
+    func prune(keeping processIds: Set<Int>) {
+        icons = icons.filter { processIds.contains($0.key) }
     }
 }

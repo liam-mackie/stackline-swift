@@ -2,9 +2,37 @@ import Foundation
 import CoreGraphics
 
 /// Calculates indicator positions relative to window stacks
-struct IndicatorPositioner {
+enum IndicatorPositioner {
     /// Default padding from screen edges
     static let defaultEdgePadding: CGFloat = 0
+
+    /// The frame, in AppKit screen coordinates, of the indicator for `stack`.
+    ///
+    /// - Parameter stacks: Every current stack. Those sharing a display with `stack` make up the
+    ///   layout that selects its per-stack settings.
+    static func frame(
+        for stack: WindowStack,
+        among stacks: [WindowStack],
+        appearance: AppearancePreferences,
+        positioning: PositioningPreferences
+    ) -> CGRect {
+        let size = IndicatorSizeCalculator.size(for: stack, appearance: appearance)
+        let neighbours = stacks.filter { $0.displayIndex == stack.displayIndex }
+        let layout = detectLayout(from: neighbours, screenBounds: stack.screenFrame)
+        let index = layoutIndex(for: stack, in: neighbours)
+        let offsets = positioning.effectiveOffsets(for: index, in: layout)
+
+        let origin = position(
+            for: stack,
+            corner: positioning.settings(for: index, in: layout).stackCorner,
+            indicatorSize: size,
+            screenBounds: stack.screenFrame,
+            horizontalOffset: offsets.horizontal,
+            verticalOffset: offsets.vertical,
+            stickToScreenEdge: positioning.stickToScreenEdge
+        )
+        return CGRect(origin: origin, size: size)
+    }
 
     /// Calculate the position for an indicator based on stack and corner preference
     static func position(
@@ -31,25 +59,9 @@ struct IndicatorPositioner {
         )
     }
 
-    /// Auto-select the best corner based on window position
-    /// Places indicator in opposite corner to minimize overlap
+    /// Auto-select the corner based on which half of the screen the stack is in.
     static func autoSelectCorner(for stack: WindowStack, screenBounds: CGRect) -> StackCorner {
-        let frame = stack.frame
-        let centerX = frame.midX
-        let centerY = frame.midY
-        let screenCenterX = screenBounds.midX
-        let screenCenterY = screenBounds.midY
-
-        let isLeft = centerX < screenCenterX
-//      let isTop = centerY > screenCenterY
-        let _ = centerY > screenCenterY
-        
-        // For now, just return top left or top right of the stack, but in future, may need to reconsider for horizontal stacks
-        if isLeft {
-            return .topLeft
-        } else {
-            return .topRight
-        }
+        stack.frame.midX < screenBounds.midX ? .topLeft : .topRight
     }
 
     /// Detect the layout pattern from a set of stacks

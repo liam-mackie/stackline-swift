@@ -1,64 +1,37 @@
 import AppKit
 import SwiftUI
 
+/// Shows the preferences window, creating it on demand and releasing it when closed.
 @MainActor
-final class PreferencesWindowController: NSObject {
+final class PreferencesWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
-    private var hostingController: NSHostingController<PreferencesView>?
-    private let preferences: UserDefaultsPreferences
-    private let stackDetector: StackDetector
+    private let preferences: Preferences
+    private let store: StackStore
 
-    init(preferences: UserDefaultsPreferences, stackDetector: StackDetector) {
+    init(preferences: Preferences, store: StackStore) {
         self.preferences = preferences
-        self.stackDetector = stackDetector
-        super.init()
-
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(showPreferences),
-            name: .openPreferences,
-            object: nil
-        )
+        self.store = store
     }
 
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-
-    @objc func showPreferences() {
-        if let existingWindow = window {
-            existingWindow.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            return
+    func show() {
+        if window == nil {
+            let controller = NSHostingController(rootView: PreferencesView(preferences: preferences, store: store))
+            let window = NSWindow(contentViewController: controller)
+            window.title = "Stackline Preferences"
+            window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+            window.setContentSize(NSSize(width: 650, height: 520))
+            window.center()
+            window.isReleasedWhenClosed = false
+            window.delegate = self
+            self.window = window
         }
 
-        let preferencesView = PreferencesView(preferences: preferences, stackDetector: stackDetector)
-        let controller = NSHostingController(rootView: preferencesView)
-        hostingController = controller
-
-        let newWindow = NSWindow(contentViewController: controller)
-        newWindow.title = "Stackline Preferences"
-        newWindow.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-        newWindow.setContentSize(NSSize(width: 650, height: 520))
-        newWindow.center()
-        newWindow.delegate = self
-
-        self.window = newWindow
-        newWindow.makeKeyAndOrderFront(nil)
+        window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    private func cleanupWindow() {
-        hostingController = nil
+    func windowWillClose(_ notification: Notification) {
         window = nil
-    }
-}
-
-extension PreferencesWindowController: NSWindowDelegate {
-    nonisolated func windowWillClose(_ notification: Notification) {
-        MainActor.assumeIsolated {
-            cleanupWindow()
-        }
     }
 }
 
@@ -85,8 +58,8 @@ enum PreferencesSection: String, CaseIterable, Identifiable {
 // MARK: - Main Preferences View
 
 struct PreferencesView: View {
-    @ObservedObject var preferences: UserDefaultsPreferences
-    @ObservedObject var stackDetector: StackDetector
+    @Bindable var preferences: Preferences
+    let store: StackStore
     @State private var selectedSection: PreferencesSection = .general
 
     var body: some View {
@@ -115,7 +88,7 @@ struct PreferencesView: View {
             PositioningPreferencesView(
                 positioning: $preferences.positioning,
                 appearance: preferences.appearance,
-                stacks: stackDetector.detectedStacks
+                stacks: store.stacks
             )
         case .advanced:
             AdvancedPreferencesView(preferences: preferences)
@@ -308,11 +281,9 @@ struct PositioningPreferencesView: View {
     }
 
     private var screenBoundsForDisplay: CGRect {
-        if let stack = stacksForSelectedDisplay.first {
-            return CoreGraphicsCoordinateSystem().displayContaining(rect: stack.frame)
-                ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
-        }
-        return NSScreen.main?.frame ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
+        stacksForSelectedDisplay.first?.screenFrame
+            ?? NSScreen.main?.frame
+            ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
     }
 
     private var currentLayout: LayoutPattern {
@@ -572,7 +543,7 @@ struct StackSettingsEditor: View {
 // MARK: - Advanced Preferences
 
 struct AdvancedPreferencesView: View {
-    @ObservedObject var preferences: UserDefaultsPreferences
+    let preferences: Preferences
     @State private var showingResetAlert = false
 
     var body: some View {

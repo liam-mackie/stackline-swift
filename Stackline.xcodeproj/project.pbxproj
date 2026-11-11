@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		94A190E42E31C83600B67315 /* Icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 94A190E32E31C83600B67315 /* Icon.icon */; };
-		94A32BDA2EEA72E300413C75 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 94SWIFTLOG0001 /* Logging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,7 +57,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				94A32BDA2EEA72E300413C75 /* Logging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,7 +128,6 @@
 			);
 			name = Stackline;
 			packageProductDependencies = (
-				94SWIFTLOG0001 /* Logging */,
 			);
 			productName = Stackline;
 			productReference = 947CF8732E319B4300A0F9A5 /* Stackline.app */;
@@ -164,9 +161,6 @@
 			);
 			mainGroup = 947CF86A2E319B4300A0F9A5;
 			minimizedProjectReferenceProxies = 1;
-			packageReferences = (
-				94SWIFTLOG0000 /* XCRemoteSwiftPackageReference "swift-log" */,
-			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 947CF8742E319B4300A0F9A5 /* Products */;
 			projectDirPath = "";
@@ -241,7 +235,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stackline.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Stackline";
 				XROS_DEPLOYMENT_TARGET = 26.1;
@@ -267,7 +261,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stackline.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Stackline";
 				XROS_DEPLOYMENT_TARGET = 26.1;
@@ -417,6 +411,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Stackline;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -427,7 +422,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
@@ -450,6 +445,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Stackline;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -460,7 +456,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
 		};
@@ -495,25 +491,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		94SWIFTLOG0000 /* XCRemoteSwiftPackageReference "swift-log" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-log.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.5.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		94SWIFTLOG0001 /* Logging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 94SWIFTLOG0000 /* XCRemoteSwiftPackageReference "swift-log" */;
-			productName = Logging;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 947CF86B2E319B4300A0F9A5 /* Project object */;
 }
